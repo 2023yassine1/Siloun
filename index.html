@@ -3,1213 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOTAL SILOUN MOLINO - Smart AI V4.5 (Firebase Cloud)</title>
+    <title>Molino AI Cloud - النظام الذكي</title>
     
-    <!-- مكتبة Chart.js للرسوم البيانية -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-    <!-- ⚙️ مكتبات Firebase (Version 8 Compat for easy use) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <link rel="manifest" href="molino_app.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#3498db">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- تنسيقات أساسية --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; color: #333; text-align: right; }
-        .container { padding: 25px; max-width: 700px; margin: 20px auto; background-color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 12px; }
-        h1 { border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; text-align: center; color: #2c3e50; }
-        h2 { font-size: 1.2rem; margin-top: 25px; margin-bottom: 15px; border-right: 4px solid #3498db; padding-right: 10px; color: #2c3e50; }
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* --- المدخلات والأزرار --- */
-        input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: 'Segoe UI', sans-serif; }
-        input[type="number"] { direction: ltr; text-align: right; }
-        button { background-color: #28a745; color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
-        button:hover { background-color: #218838; transform: translateY(-1px); }
-        .secondary-btn { background-color: #6c757d; }
-        .danger-btn { background-color: #dc3545; }
-        .reset-btn { background-color: #8b0000; color: #ffcccc; margin-top: 10px; border: 1px solid #5a0000;} 
-        .small-btn { width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
-        .input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-        .input-group input, .input-group select { margin-bottom: 0; }
-
-        /* --- الجداول --- */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { border: 1px solid #e9ecef; padding: 8px; text-align: center; }
-        th { background-color: #3498db; color: white; }
-        td { direction: ltr; unicode-bidi: embed; }
-
-        /* --- تصميم المؤشرات (Gauges) --- */
-        .gauge-container { margin-bottom: 20px; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa; }
-        .gauge-labels { display: flex; justify-content: space-between; direction: ltr; margin-bottom: 8px; }
-        .gauge-wrapper { display: flex; align-items: center; gap: 4px; height: 30px; }
-        .gauge-main { flex-grow: 1; background-color: #e9ecef; border-radius: 6px 0 0 6px; height: 100%; overflow: hidden; position: relative; }
-        .gauge-extension { width: 20%; background-color: #dedede; border-radius: 0 6px 6px 0; height: 100%; overflow: hidden; position: relative; border-left: 2px dashed #bbb; }
-        .fill-bar { height: 100%; width: 0%; transition: width 0.6s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold; }
-        .gauge-sub-labels { display: flex; justify-content: space-between; font-size: 10px; color: #777; margin-top: 4px; }
-        .blinking { animation: blinker var(--blink-speed) linear infinite; } @keyframes blinker { 50% { opacity: 0.7; } }
-
-        /* --- بطاقة الذكاء الاصطناعي (AI Analysis) --- */
-        #ai-card { background: linear-gradient(135deg, #f0f9ff 0%, #e1f5fe 100%); border: 1px solid #b3e5fc; border-radius: 10px; overflow: hidden; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .ai-header { background-color: #0288d1; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .ai-body { padding: 15px; }
+        /* مؤشرات التحميل */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* شبكة الإحصائيات */
-        .ai-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .ai-stat-box { background: white; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #b3e5fc; }
-        .ai-value { display: block; font-size: 1.1rem; font-weight: bold; color: #0277bd; font-family: sans-serif; }
-        .ai-label { font-size: 0.75rem; color: #546e7a; }
-
-        /* قائمة التوصيات */
-        .ai-insights { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
-        .ai-insights li { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: flex-start; gap: 8px; background: rgba(255,255,255,0.6); margin-bottom: 5px; border-radius: 4px; }
-        .ai-insights li:last-child { border-bottom: none; }
-        
-        /* مقارنة الأداء */
-        .performance-bar-container { margin-top: 15px; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 6px; }
-        .perf-title { font-size: 0.85rem; color: #455a64; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .perf-progress-bg { height: 8px; background: #cfd8dc; border-radius: 4px; overflow: hidden; }
-        .perf-progress-fill { height: 100%; background: #4caf50; width: 0%; transition: width 1s; }
-
-        /* قسم الإدارة */
-        .backup-section { background-color: #f1f1f1; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ccc; }
-        
-        /* تنسيقات صفحة المصادقة */
-        #auth-page { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #3498db; }
-        .auth-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 90%; max-width: 400px; text-align: center; }
-        
-        /* تنسيقات صفحة الرسوم البيانية المنفصل (Modal) */
-        .charts-modal, .settings-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
-        .charts-content, .settings-content { background-color: #fefefe; margin: 2% auto; padding: 20px; width: 95%; max-width: 700px; border-radius: 12px; }
-        .charts-content h2 { border-right: 4px solid #ffeb3b; color: #795548; }
-        .settings-content h2 { border-right: 4px solid #f44336; color: #f44336; }
-        .chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 25px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
-        .chart-container h4 { text-align: center; color: #795548; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 10px;}
-
-        /* زر قائمة الخيارات في الأعلى (الثلاث نقاط) */
-        .options-menu-btn { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            font-size: 24px; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            color: #333; 
-            width: auto; 
-            padding: 5px;
-            margin-bottom: 0;
-        }
-
-        /* تنسيقات صفحة الإعدادات (خاص) */
-        #settingsForm label { display: block; font-weight: bold; margin-bottom: 5px; margin-top: 10px; }
-        .silo-settings-row { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 15px; 
-            align-items: center; 
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 6px;
-            background-color: #fafafa;
-            flex-wrap: wrap;
-        }
-        .silo-settings-row > div { 
-            flex: 1 1 45%; /* يسمح للعناصر بالنمو والتكدس */
-            min-width: 150px;
-        }
-        .silo-settings-row input[type="text"], .silo-settings-row input[type="number"] {
-            margin-bottom: 0;
-            padding: 8px;
-            width: 100%;
-        }
-        .silo-settings-row .silo-name-input {
-            flex: 1 1 100%;
-        }
-        .silo-settings-row .silo-capacity-input {
-            display: flex;
-            align-items: center;
-        }
-        .silo-settings-row .silo-capacity-input span {
-            flex-shrink: 0;
-            margin-right: 5px;
-        }
+        /* شريط التمديد */
+        .gauge-bar { transition: width 1s ease-in-out; }
+        .blinking { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
-<!-- شاشة المصادقة -->
-<div id="auth-page">
-    <div class="auth-box">
-        <h2 id="auth-title">تسجيل الدخول (Firebase) 👋</h2>
-        <form id="authForm">
-            <label style="display: block; text-align: right; margin-bottom: 5px;">البريد الإلكتروني:</label>
-            <input type="email" id="emailInput" required placeholder="name@example.com">
+    <div id="auth-view" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V6</span></h1>
+            <p class="text-gray-500 mb-6">تسجيل الدخول للنظام المركزي</p>
             
-            <label style="display: block; text-align: right; margin-bottom: 5px;">كلمة المرور:</label>
-            <input type="password" id="passwordInput" required placeholder="كلمة المرور">
-            
-            <p id="authMessage" class="auth-message" style="display: none; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-weight: bold;"></p>
-            
-            <button type="submit" id="authButton">دخول</button>
-            <span id="toggleAuth" class="toggle-link" style="color: #3498db; cursor: pointer; text-decoration: underline;" onclick="toggleAuthMode()">إنشاء حساب جديد</span>
-        </form>
-    </div>
-</div>
-
-<!-- التطبيق الرئيسي -->
-<div id="main-app" class="container" style="display:none;">
-    <button class="options-menu-btn" onclick="showSettingsModal()">⚙️</button>
-    
-    <h1>🏭 TOTAL SILOUN MOLINO <span style="font-size:0.5em; color:#777;">AI Cloud V5.0</span></h1>
-    <div style="text-align: left; margin-bottom: 15px;">
-        <span style="font-size: 0.8em; color: #666;">مرحباً بك، <strong id="loggedInUser"></strong></span>
-        <button class="danger-btn small-btn" onclick="logout()" style="width: auto; margin-right: 10px;">خروج</button>
-    </div>
-
-    <hr>
-    
-    <h2>📝 تسجيل البيانات</h2>
-    <form id="entryForm">
-        <label>اختيار الخزان:</label>
-        <select id="silounSelect" required>
-            <!-- سيتم ملؤها ديناميكياً -->
-        </select>
-
-        <label>الوزن الحالي (<span id="maxWeightDisplay">Max T</span>):</label>
-        <input type="number" id="weightInput" min="0" step="0.01" required placeholder="مثال: 64.50">
-        
-        <label>وقت التسجيل:</label>
-        <input type="datetime-local" id="dateTimeInput" required>
-
-        <button type="submit">✅ تسجيل القراءة (سحابي)</button>
-    </form>
-    
-    <hr>
-
-    <h2>📊 حالة الخزانات (مباشر)</h2>
-    <div id="gauges"></div>
-    
-    <div id="ai-card">
-        <div class="ai-header">
-            <span>🤖 التحليل الذكي للأداء</span>
-            <span id="liveStatus" style="font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">جاري الاتصال...</span>
+            <form id="authForm" class="space-y-4">
+                <input type="email" id="emailInput" placeholder="البريد الإلكتروني" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-right">
+                <input type="password" id="passwordInput" placeholder="كلمة المرور" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-right">
+                <div id="authMessage" class="hidden p-2 rounded text-sm font-bold"></div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">دخول آمن</button>
+            </form>
+            <p class="mt-4 text-sm text-gray-500 cursor-pointer hover:text-blue-600" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</p>
         </div>
-        <div class="ai-body">
-            <div class="ai-stats-grid">
-                <div class="ai-stat-box">
-                    <span class="ai-value" id="aiSpeed">0.0</span>
-                    <span class="ai-label">السرعة (طن/ساعة)</span>
+    </div>
+
+    <div id="app-view" class="hidden">
+        
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-industry text-blue-600 text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800 leading-none">Molino AI</h1>
+                        <span class="text-xs text-gray-500" id="userEmailDisplay">جاري التحميل...</span>
+                    </div>
                 </div>
-                <div class="ai-stat-box">
-                    <span class="ai-value" id="aiTotal">0.00</span>
-                    <span class="ai-label">إنتاج الجلسة</span>
+                <button onclick="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+            
+            <nav class="flex overflow-x-auto bg-white border-t border-slate-100 no-scrollbar">
+                <button onclick="switchTab('dashboard')" class="tab-btn active flex-1 py-3 px-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition" id="tab-dashboard">
+                    <i class="fa-solid fa-gauge ml-1"></i> التحكم
+                </button>
+                <button onclick="switchTab('ai')" class="tab-btn flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-blue-500 transition" id="tab-ai">
+                    <i class="fa-solid fa-robot ml-1"></i> المساعد الذكي
+                </button>
+                <button onclick="switchTab('history')" class="tab-btn flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-blue-500 transition" id="tab-history">
+                    <i class="fa-solid fa-clock-rotate-left ml-1"></i> الأرشيف
+                </button>
+                <button onclick="switchTab('settings')" class="tab-btn flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-blue-500 transition" id="tab-settings">
+                    <i class="fa-solid fa-gear ml-1"></i> الإعدادات
+                </button>
+            </nav>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-4 pb-20">
+
+            <div id="view-dashboard" class="tab-content active space-y-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-blue-500"></i> تسجيل قراءة جديدة</h2>
+                    <form id="entryForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">الخزان</label>
+                            <select id="silounSelect" class="w-full p-2 border rounded bg-slate-50"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">الوزن الحالي (T)</label>
+                            <input type="number" id="weightInput" step="0.01" class="w-full p-2 border rounded bg-slate-50 text-left" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">التوقيت</label>
+                            <input type="datetime-local" id="dateTimeInput" class="w-full p-2 border rounded bg-slate-50">
+                        </div>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition h-[42px]">
+                            <i class="fa-solid fa-check"></i> تسجيل
+                        </button>
+                    </form>
                 </div>
-                <div class="ai-stat-box">
-                    <span class="ai-value" id="aiBestDay">-</span>
-                    <span class="ai-label">أفضل يوم (سابق)</span>
+
+                <div id="gauges-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                    <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-bold">سجل الجلسة الحالية</h3>
+                        <span id="session-counter" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">0 قراءات</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="p-3">الوقت</th>
+                                    <th class="p-3">الخزان</th>
+                                    <th class="p-3">الوزن</th>
+                                    <th class="p-3">الفرق</th>
+                                    <th class="p-3">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordsBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="endWork()" class="bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-200 transition">
+                        <i class="fa-solid fa-stop"></i> إنهاء الجلسة والحفظ
+                    </button>
+                    <button onclick="showCharts()" class="bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-xl font-bold shadow-lg transition">
+                        <i class="fa-solid fa-chart-line"></i> الرسوم البيانية
+                    </button>
                 </div>
             </div>
 
-            <div class="performance-bar-container">
-                <div class="perf-title">
-                    <span>مقارنة بمتوسط الأداء التاريخي</span>
-                    <span id="compText">0%</span>
+            <div id="view-ai" class="tab-content space-y-6">
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-x-10 -translate-y-10"></div>
+                    <h2 class="text-2xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> تحليل الإنتاج الذكي</h2>
+                    <p class="text-indigo-100 mb-6 text-sm">يقوم Gemini بتحليل بيانات الجلسة الحالية (السرعة، الاستهلاك، التوقعات) ويعطيك تقريراً فنياً.</p>
+                    
+                    <button onclick="analyzeCurrentSession()" id="analyzeBtn" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold py-2 px-6 rounded-full shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> تحليل الجلسة الآن
+                    </button>
+
+                    <div id="ai-analysis-result" class="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed hidden border border-white/20"></div>
                 </div>
-                <div class="perf-progress-bg">
-                    <div id="compBar" class="perf-progress-fill"></div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 h-[500px] flex flex-col">
+                    <div class="p-4 border-b bg-slate-50 font-bold text-gray-700">
+                        <i class="fa-solid fa-comments text-blue-500"></i> محادثة مع المساعد التقني
+                    </div>
+                    
+                    <div id="chatHistory" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                        <div class="flex justify-start">
+                            <div class="bg-white border border-slate-200 text-slate-600 p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-sm">
+                                مرحباً بك! أنا مساعدك الذكي في نظام Molino. يمكنك سؤالي عن صيانة الخزانات، حساب الكفاءة، أو تقييم أي جدول عمل.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border-t bg-white">
+                        <div id="chat-loader" class="h-1 bg-blue-100 w-full mb-2 overflow-hidden rounded-full hidden">
+                            <div class="h-full bg-blue-500 animate-pulse w-1/2 mx-auto rounded-full"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." class="flex-1 p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" onkeypress="if(event.key === 'Enter') handleChat()">
+                            <button onclick="handleChat()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition w-12 flex items-center justify-center">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <small id="compMessage" style="display:block; margin-top:5px; font-size:0.75rem; color:#666;"></small>
             </div>
 
-            <h4 style="margin: 10px 0 5px 0; font-size: 0.9rem; color: #0277bd;">📋 التوصيات والملاحظات:</h4>
-            <ul class="ai-insights" id="aiInsightsList">
-                <li>يرجى إدخال بيانات لبدء التحليل...</li>
-            </ul>
-        </div>
-    </div>
-    
-    <hr>
-    
-    <button class="secondary-btn" onclick="showChartsModal()">📊 عرض الرسوم البيانية التفاعلية</button>
-    
-    <hr>
-
-    <h2>📑 السجل الحالي</h2>
-    <table id="recordsTable">
-        <thead>
-            <tr><th>الوقت</th><th>الخزان</th><th>الوزن</th><th>الفرق</th><th>حذف</th></tr>
-        </thead>
-        <tbody id="recordsBody"></tbody>
-    </table>
-
-    <hr>
-
-    <div style="display: flex; gap: 10px;">
-        <button class="danger-btn" onclick="endWork()" style="flex: 1;">🔴 إنهاء وحفظ للأرشيف</button>
-        <button class="secondary-btn" onclick="viewHistory()" style="flex: 1;">📂 الأرشيف والمقارنة</button>
-    </div>
-
-    <div class="backup-section">
-        <h3 style="margin-top: 0; font-size: 1rem;">💾 أدوات النظام</h3>
-        <p style="font-size:0.8em; color:#666;">البيانات محفوظة تلقائياً في السحابة (Firebase Cloud).</p>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button class="secondary-btn small-btn" onclick="exportData()">⬇️ تحميل Backup محلي</button>
-            <input type="file" id="importFile" accept=".json" style="padding: 5px;" onchange="importData(this)">
-        </div>
-    </div>
-</div>
-
-<!-- النوافذ المنبثقة (Modals) -->
-
-<div id="chartsModal" class="charts-modal">
-    <div class="charts-content">
-        <h2 style="display: flex; justify-content: space-between; align-items: center;">
-            <span>📈 الرسوم البيانية التفاعلية</span>
-            <button class="danger-btn small-btn" onclick="hideChartsModal()" style="margin: 0; width: auto;">إغلاق ✖️</button>
-        </h2>
-        
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button class="secondary-btn small-btn" onclick="renderAllCharts()">🔄 تحديث الرسوم البيانية</button>
-        </div>
-
-        <div class="chart-container" style="height: 350px;">
-            <h4>الأوزان التراكمية الحالية (T) - كل خزان</h4>
-            <canvas id="currentWeightsChart"></canvas>
-        </div>
-
-        <div class="chart-container" style="height: 350px;">
-            <h4>فروقات الأوزان (طن) - الجلسة الحالية</h4>
-            <canvas id="currentDifferencesChart"></canvas>
-        </div>
-        
-        <div class="chart-container" style="height: 350px;">
-            <h4>إجمالي الإنتاج اليومي (T) - الأرشيف</h4>
-            <canvas id="historyTotalChart"></canvas>
-        </div>
-        
-        <div class="chart-container" style="height: 350px;">
-            <h4>متوسط سرعة الإنتاج (T/h) - الأرشيف</h4>
-            <canvas id="historySpeedChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div id="settingsModal" class="settings-modal">
-    <div class="settings-content">
-        <h2 style="display: flex; justify-content: space-between; align-items: center;">
-            <span>⚙️ إعدادات المصنع المتقدمة (Firebase)</span>
-            <button class="danger-btn small-btn" onclick="hideSettingsModal()" style="margin: 0; width: auto;">إغلاق ✖️</button>
-        </h2>
-        
-        <div id="admin-access-warning" style="display:none; background:#ffebee; color:#c62828; padding:10px; margin-bottom:15px; border-radius:5px;">
-            ⚠️ <strong>تنبيه:</strong> أنت لست المسؤول. لا يمكنك حفظ التعديلات على الإعدادات العامة.
-        </div>
-
-        <form id="settingsForm">
-            <h3>🎨 إعدادات التنسيق البصري</h3>
-            <label for="blinkSpeedInput">سرعة وميض التنبيه (ثانية):</label>
-            <div class="input-group">
-                <input type="number" id="blinkSpeedInput" min="0.1" max="2" step="0.1" required>
-                <span>ثانية</span>
+            <div id="view-history" class="tab-content">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-bold">سجل العمليات السابقة</h3>
+                        <button onclick="loadUserHistory()" class="text-blue-500 text-sm hover:underline">تحديث</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">الإجمالي (T)</th>
+                                    <th class="p-3">السرعة (T/h)</th>
+                                    <th class="p-3">تفاصيل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            
-            <label for="highWeightColorInput">لون التعبئة العالية (90% من السعة):</label>
-            <input type="color" id="highWeightColorInput" required>
-            
-            <label for="extensionColorInput">لون وضع التمديد (فوق السعة المقدرة):</label>
-            <input type="color" id="extensionColorInput" required>
 
-            <h3 style="margin-top: 30px;">🛢️ إدارة الخزانات والسعات</h3>
-            <div id="siloSettingsContainer"></div>
-            <button type="button" class="secondary-btn small-btn" onclick="addSiloSetting()" style="width: auto;">➕ إضافة خزان جديد</button>
-            <hr>
-            
-            <button type="submit" id="saveSettingsBtn" style="margin-top: 20px;">💾 حفظ الإعدادات (Cloud)</button>
-            <p id="settingsMessage" style="color: green; font-weight: bold; display: none; margin-top: 10px;"></p>
-            
-            <hr style="margin-top: 20px;">
-            <h3 style="color: #dc3545;">⚠️ المنطقة الخطرة</h3>
-            <p style="font-size: 0.85rem; color: #6c757d;">حذف جميع بياناتك من السحابة بشكل نهائي.</p>
-            <button type="button" class="reset-btn" onclick="factoryReset()">🔥 حذف بياناتي وإعادة ضبط المصنع</button>
-        </form>
-    </div>
-</div>
-
-<div id="historyPage" class="container" style="display:none;">
-    <h2>📂 الأرشيف التاريخي</h2>
-    <div style="background:#e8f5e9; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #c8e6c9;">
-        <strong>🏆 القاعة الشرفية:</strong> أفضل إنتاج مسجل كان بتاريخ <span id="bestDateDisplay"></span> بكمية <strong id="bestAmountDisplay"></strong> طن.
-    </div>
-    <table id="historyTable">
-        <thead><tr><th>التاريخ</th><th>الإجمالي (T)</th><th>السرعة (T/h)</th><th>خيارات</th></tr></thead> 
-        <tbody id="historyBody"></tbody>
-    </table>
-    <button style="margin-top: 20px;" onclick="hideHistory()" class="secondary-btn">🔙 عودة</button>
-</div>
-
-<div id="sessionDetailsModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-    <div style="background-color: #fefefe; margin: 5% auto; padding: 25px; width: 90%; max-width: 500px; border-radius: 12px;">
-        <h3 style="margin-top:0;">تفاصيل الجلسة</h3>
-        <div id="modalAiSummary" class="ai-summary-box"></div> 
-        
-        <div style="max-height: 300px; overflow-y: auto;">
-            <table id="modalRecordsTable">
-                <thead>
-                    <tr><th>الوقت</th><th>الخزان</th><th>الوزن</th><th>الفرق</th></tr> 
-                </thead>
-                <tbody id="modalRecordsBody"></tbody>
-            </table>
-        </div>
-        <button onclick="document.getElementById('sessionDetailsModal').style.display='none'" class="danger-btn small-btn" style="float: right; margin-top: 15px;">إغلاق</button>
-        <div style="clear: both;"></div>
-    </div>
-</div>
-
-<script>
-    // ==========================================
-    // ☁️ إعدادات Firebase
-    // ==========================================
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyCXeIS89Cd0DKz7BTsIfQDr3Ckb544dR8k",
-        authDomain: "siloun.firebaseapp.com",
-        databaseURL: "https://siloun-default-rtdb.firebaseio.com",
-        projectId: "siloun",
-        storageBucket: "siloun.firebasestorage.app",
-        messagingSenderId: "111587591132",
-        appId: "1:111587591132:web:0b7e481138e8885076c519"
-    };
-
-    // تهيئة Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const database = firebase.database();
-
-    // ==========================================
-    // ⚙️ المتغيرات والثوابت
-    // ==========================================
-    
-    // 🛑 تأكد أن هذا يطابق البريد الموجود في قواعد الأمان
-    const ADMIN_EMAIL = 'koreanarabione@gmail.com'; 
-    const DB_ROOT_PATH = 'molino_app_data/';
-    const SETTINGS_PATH = 'settings'; 
-
-    let currentUserId = null;
-    let currentUserEmail = null;
-    let AppSettings = {}; 
-    let currentSessionRecords = []; 
-    let lastKnownWeights = {}; 
-    let currentAiAnalysis = {}; 
-    let authMode = 'login'; 
-    
-    let currentWeightsChart = null;
-    let currentDifferencesChart = null;
-    let historyTotalChart = null;
-    let historySpeedChart = null;
-    
-    const DEFAULT_CHART_COLORS = {
-        'Good': 'rgba(40, 167, 69, 1)', 
-        'Bad': 'rgba(220, 53, 69, 1)', 
-    };
-
-    const DEFAULT_SETTINGS = {
-        BLINK_SPEED: 1.0, 
-        HIGH_WEIGHT_COLOR: '#ffc107', 
-        EXTENSION_COLOR: '#dc3545',   
-        NORMAL_COLOR: '#28a745',      
-        SILOS: [
-            { id: 1, name: 'Siloun 1', ratedCapacity: 63.0, maxExtension: 75.0 },
-            { id: 2, name: 'Siloun 2', ratedCapacity: 63.0, maxExtension: 75.0 },
-            { id: 3, name: 'Siloun 3', ratedCapacity: 63.0, maxExtension: 75.0 },
-            { id: 4, name: 'Siloun 4', ratedCapacity: 63.0, maxExtension: 75.0 }
-        ],
-    };
-
-    // ==========================================
-    // 🔐 إدارة المصادقة (Auth Management)
-    // ==========================================
-
-    auth.onAuthStateChanged((user) => {
-        hideAllPages();
-        if (user) {
-            currentUserId = user.uid;
-            currentUserEmail = user.email;
-            
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('loggedInUser').textContent = user.email;
-            
-            // تحميل البيانات عند تسجيل الدخول
-            loadInitialData(); 
-        } else {
-            currentUserId = null;
-            currentUserEmail = null;
-            document.getElementById('auth-page').style.display = 'flex';
-        }
-    });
-
-    function toggleAuthMode() {
-        const title = document.getElementById('auth-title');
-        const button = document.getElementById('authButton');
-        const link = document.getElementById('toggleAuth');
-        const message = document.getElementById('authMessage');
-
-        if (authMode === 'login') {
-            authMode = 'register';
-            title.textContent = 'إنشاء حساب جديد ✨';
-            button.textContent = 'تسجيل';
-            link.textContent = 'لدي حساب بالفعل (تسجيل دخول)';
-        } else {
-            authMode = 'login';
-            title.textContent = 'تسجيل الدخول 👋';
-            button.textContent = 'دخول';
-            link.textContent = 'إنشاء حساب جديد';
-        }
-        message.style.display = 'none';
-    }
-
-    document.getElementById('authForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('emailInput').value.trim();
-        const password = document.getElementById('passwordInput').value.trim();
-        const message = document.getElementById('authMessage');
-
-        message.style.display = 'none';
-
-        if (authMode === 'register') {
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    message.textContent = '✅ تم التسجيل بنجاح. جاري الدخول...';
-                    message.style.backgroundColor = '#d4edda';
-                    message.style.color = '#155724';
-                    message.style.display = 'block';
-                })
-                .catch(error => {
-                    message.textContent = `❌ خطأ: ${error.message}`;
-                    message.style.backgroundColor = '#f8d7da';
-                    message.style.color = '#721c24';
-                    message.style.display = 'block';
-                });
-        } else {
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(error => {
-                    message.textContent = `❌ خطأ: ${error.message}`;
-                    message.style.backgroundColor = '#f8d7da';
-                    message.style.color = '#721c24';
-                    message.style.display = 'block';
-                });
-        }
-    });
-
-    function logout() {
-        if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-            auth.signOut();
-        }
-    }
-
-    // ==========================================
-    // ☁️ وظائف البيانات (Firebase Database)
-    // ==========================================
-
-    async function loadInitialData() {
-        await loadSettings(); // تحميل الإعدادات أولاً
-        await loadUserSessionData(); // ثم بيانات الجلسة
-        
-        updateDateTime();
-        updateAllGauges();
-        renderRecords();
-        performSmartAIAnalysis();
-    }
-
-    function loadSettings() {
-        // قراءة الإعدادات العامة
-        return database.ref(DB_ROOT_PATH + SETTINGS_PATH).once('value')
-            .then(snapshot => {
-                const val = snapshot.val();
-                if (val) {
-                    AppSettings = { ...DEFAULT_SETTINGS, ...val };
-                    // تصحيح المصفوفات إذا جاءت ككائنات
-                    if (val.SILOS && !Array.isArray(val.SILOS)) {
-                        AppSettings.SILOS = Object.values(val.SILOS);
-                    }
-                } else {
-                    AppSettings = DEFAULT_SETTINGS;
-                }
+            <div id="view-settings" class="tab-content space-y-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-700">إعدادات الخزانات (المسؤول)</h3>
+                    <div id="admin-warning" class="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm hidden">
+                        <i class="fa-solid fa-lock"></i> للقراءة فقط: أنت لست المسؤول.
+                    </div>
+                    <form id="settingsForm" class="space-y-4">
+                        <div id="siloSettingsContainer" class="space-y-3"></div>
+                        <button type="button" onclick="addSiloField()" class="text-blue-600 text-sm hover:underline">+ إضافة خزان</button>
+                        <hr>
+                        <button type="submit" id="saveSettingsBtn" class="bg-slate-800 text-white py-2 px-6 rounded-lg hover:bg-slate-900 transition">حفظ التغييرات</button>
+                    </form>
+                </div>
                 
-                // التأكد من أن كل خزان لديه ID
-                AppSettings.SILOS = AppSettings.SILOS.map((s, i) => ({ ...s, id: s.id || (i + 1) }));
-                applySettingsToUI();
+                <div class="bg-red-50 rounded-xl p-6 border border-red-100">
+                    <h3 class="font-bold text-red-700 mb-2">منطقة الخطر</h3>
+                    <p class="text-sm text-red-600 mb-4">حذف جميع البيانات من السحابة. لا يمكن التراجع عن هذا الإجراء.</p>
+                    <button onclick="factoryReset()" class="bg-white border border-red-300 text-red-600 hover:bg-red-600 hover:text-white py-2 px-4 rounded transition text-sm">إعادة ضبط المصنع</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="chartsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
+            <button onclick="document.getElementById('chartsModal').classList.add('hidden')" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-xl font-bold mb-6">التحليل البياني</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 p-4 rounded-xl h-64"><canvas id="chartWeights"></canvas></div>
+                <div class="bg-slate-50 p-4 rounded-xl h-64"><canvas id="chartDiff"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. إعدادات Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXeIS89Cd0DKz7BTsIfQDr3Ckb544dR8k",
+            authDomain: "siloun.firebaseapp.com",
+            databaseURL: "https://siloun-default-rtdb.firebaseio.com",
+            projectId: "siloun",
+            storageBucket: "siloun.firebasestorage.app",
+            messagingSenderId: "111587591132",
+            appId: "1:111587591132:web:0b7e481138e8885076c519"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // --- 2. إعدادات Gemini AI ---
+        // ** تم الإصلاح هنا: تم وضع مفتاح Gemini API الذي أرسلته **
+        const GEMINI_API_KEY = "AIzaSyAMvr70Ijt5ueZ8gmropQ_xq0wouo5E75Y"; 
+        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // --- 3. المتغيرات العامة ---
+        const ADMIN_EMAIL = 'koreanarabione@gmail.com';
+        let currentUser = null;
+        let appSettings = { 
+            SILOS: [
+                { id: 1, name: 'Siloun 1', rated: 63, max: 75 },
+                { id: 2, name: 'Siloun 2', rated: 63, max: 75 },
+                { id: 3, name: 'Siloun 3', rated: 63, max: 75 },
+                { id: 4, name: 'Siloun 4', rated: 63, max: 75 }
+            ],
+            colors: { high: '#f59e0b', ext: '#ef4444', normal: '#10b981' }
+        };
+        let currentSession = [];
+        let charts = {};
+
+        // --- 4. إدارة التبويبات ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                el.classList.add('text-gray-500');
             });
-    }
-
-    function saveSettings() {
-        // التحقق من صلاحية المسؤول
-        if (currentUserEmail !== ADMIN_EMAIL) {
-            return Promise.reject(new Error("غير مصرح لك بتعديل الإعدادات العامة."));
-        }
-
-        const settingsToSave = JSON.parse(JSON.stringify(AppSettings));
-        delete settingsToSave.NORMAL_COLOR; // لا نحفظ الثابت
-        
-        return database.ref(DB_ROOT_PATH + SETTINGS_PATH).set(settingsToSave);
-    }
-
-    function loadUserSessionData() {
-        if (!currentUserId) return Promise.resolve();
-        
-        return database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).once('value')
-            .then(snapshot => {
-                const stored = snapshot.val();
-                currentSessionRecords = stored ? Object.values(stored) : [];
-                
-                // حساب آخر وزن معروف لكل خزان
-                lastKnownWeights = {}; 
-                AppSettings.SILOS.forEach(silo => {
-                    const recs = currentSessionRecords
-                        .filter(r => r.siloun === silo.name)
-                        .sort((a,b) => a.id - b.id); 
-                    lastKnownWeights[silo.name] = recs.length ? parseFloat(recs[recs.length-1].weight) : 0;
-                });
-            });
-    }
-
-    function saveUserSessionData() {
-        if (!currentUserId) return Promise.resolve();
-        
-        // تحويل المصفوفة إلى كائن باستخدام ID كمفتاح
-        const sessionObject = currentSessionRecords.reduce((obj, rec) => {
-            obj[rec.id] = rec;
-            return obj;
-        }, {});
-        
-        return database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).set(sessionObject);
-    }
-    
-    function loadUserHistory() {
-        if (!currentUserId) return Promise.resolve([]);
-        return database.ref(DB_ROOT_PATH + 'history/' + currentUserId).once('value')
-            .then(snapshot => {
-                 const stored = snapshot.val();
-                 return stored ? Object.values(stored) : [];
-            });
-    }
-
-    function saveUserHistory(historyData) {
-        if (!currentUserId) return Promise.resolve();
-        
-        const historyObject = historyData.reduce((obj, rec) => {
-            obj[new Date(rec.date).getTime()] = rec; 
-            return obj;
-        }, {});
-
-        return database.ref(DB_ROOT_PATH + 'history/' + currentUserId).set(historyObject);
-    }
-
-    // ==========================================
-    // 🖥️ واجهة المستخدم والمنطق
-    // ==========================================
-
-    function hideAllPages() {
-        document.getElementById('auth-page').style.display = 'none';
-        document.getElementById('main-app').style.display = 'none';
-        document.getElementById('historyPage').style.display = 'none';
-        document.getElementById('sessionDetailsModal').style.display = 'none';
-        document.getElementById('chartsModal').style.display = 'none';
-        document.getElementById('settingsModal').style.display = 'none'; 
-    }
-
-    function applySettingsToUI() {
-        document.documentElement.style.setProperty('--blink-speed', `${AppSettings.BLINK_SPEED}s`);
-        
-        const maxOverallExtension = AppSettings.SILOS.reduce((max, s) => Math.max(max, s.maxExtension), 0);
-        const maxWeightDisplay = document.getElementById('maxWeightDisplay');
-        if (maxWeightDisplay) {
-            maxWeightDisplay.textContent = `Max ${maxOverallExtension.toFixed(1)}T`;
-        }
-        
-        updateSiloDropdown();
-        setupGauges();
-        updateAllGauges();
-    }
-    
-    function updateSiloDropdown() {
-        const select = document.getElementById('silounSelect');
-        if (select) {
-            select.innerHTML = AppSettings.SILOS.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
             
-            select.onchange = () => {
-                const selectedSiloName = select.value;
-                const selectedSilo = AppSettings.SILOS.find(s => s.name === selectedSiloName);
-                if (selectedSilo) {
-                     document.getElementById('weightInput').max = selectedSilo.maxExtension;
-                     document.getElementById('maxWeightDisplay').textContent = `Max ${selectedSilo.maxExtension.toFixed(1)}T`;
-                }
-            };
-            if(AppSettings.SILOS.length > 0) {
-                 // Trigger change to set initial max values
-                 select.dispatchEvent(new Event('change'));
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            const btn = document.getElementById(`tab-${tabId}`);
+            btn.classList.remove('text-gray-500');
+            btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            
+            // تحميل الأرشيف عند التبديل
+            if (tabId === 'history' && currentUser) {
+                loadUserHistory();
+            }
+            // إعادة عرض الإعدادات
+            if (tabId === 'settings' && currentUser) {
+                renderSiloSettingsInputs();
             }
         }
-    }
 
-    function setupGauges() {
-        document.getElementById('gauges').innerHTML = AppSettings.SILOS.map(silo => {
-            const RATED_CAPACITY = silo.ratedCapacity;
-            const MAX_EXTENSION = silo.maxExtension;
-            const siloName = silo.name;
-            const id = siloName.replace(/\s/g,''); // إزالة المسافات للـ ID
+        // --- 5. المصادقة ---
+        let isLoginMode = true;
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                document.getElementById('userEmailDisplay').textContent = user.email;
+                initializeApp();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-view').classList.remove('hidden');
+                document.getElementById('app-view').classList.add('hidden');
+            }
+        });
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.querySelector('#auth-view h1').innerHTML = isLoginMode ? 'Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V6</span>' : 'إنشاء حساب جديد';
+            document.querySelector('#auth-view button').textContent = isLoginMode ? 'دخول آمن' : 'تسجيل حساب';
+            document.querySelector('#auth-view p.cursor-pointer').textContent = isLoginMode ? 'ليس لديك حساب؟ إنشاء حساب جديد' : 'لديك حساب بالفعل؟ دخول';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passwordInput').value;
+            const msg = document.getElementById('authMessage');
             
-            return `
-                <div class="gauge-container">
-                    <div class="gauge-labels">
-                        <strong>${siloName}</strong>
-                        <strong style="font-family:sans-serif;"><span id="w-${id}">0.00</span> T</strong>
+            msg.textContent = 'جاري الاتصال...';
+            msg.className = 'p-2 rounded text-sm font-bold bg-blue-50 text-blue-600 block';
+
+            const promise = isLoginMode ? auth.signInWithEmailAndPassword(email, pass) : auth.createUserWithEmailAndPassword(email, pass);
+            
+            promise.catch(err => {
+                msg.textContent = err.message;
+                msg.className = 'p-2 rounded text-sm font-bold bg-red-50 text-red-600 block';
+            });
+        });
+
+        function logout() { auth.signOut(); }
+
+        // --- 6. منطق التطبيق (Dashboard) ---
+        async function initializeApp() {
+            await loadSettings();
+            await loadSession();
+            updateUI();
+            updateDateTime();
+            
+            // تحديث حالة المسؤول في واجهة الإعدادات
+            const isAdmin = currentUser.email === ADMIN_EMAIL;
+            document.getElementById('admin-warning').classList.toggle('hidden', isAdmin);
+            document.getElementById('saveSettingsBtn').disabled = !isAdmin;
+            if(!isAdmin) document.getElementById('saveSettingsBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            else document.getElementById('saveSettingsBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function loadSettings() {
+            return db.ref('molino_app_data/settings').once('value').then(snap => {
+                if(snap.val()) appSettings = { ...appSettings, ...snap.val() };
+                renderSiloSettingsInputs();
+                renderGauges();
+                updateSiloSelect();
+            });
+        }
+
+        function loadSession() {
+            return db.ref(`molino_app_data/sessions/${currentUser.uid}`).once('value').then(snap => {
+                const data = snap.val();
+                // التأكد من أن البيانات هي مصفوفة إذا كانت غير فارغة
+                currentSession = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
+                renderRecords();
+            });
+        }
+
+        function updateUI() {
+            // تحديث العدادات (Gauges)
+            appSettings.SILOS.forEach(silo => {
+                const recs = currentSession.filter(r => r.silo === silo.name).sort((a,b) => a.ts - b.ts);
+                const lastWeight = recs.length ? parseFloat(recs[recs.length-1].weight) : 0;
+                updateGauge(silo.id, lastWeight, silo.rated, silo.max);
+            });
+            document.getElementById('session-counter').textContent = `${currentSession.length} قراءات`;
+        }
+
+        function renderGauges() {
+            const container = document.getElementById('gauges-container');
+            container.innerHTML = appSettings.SILOS.map(s => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between mb-2">
+                        <span class="font-bold text-sm text-slate-700">${s.name}</span>
+                        <span class="font-mono font-bold text-blue-600" id="val-${s.id}">0.00 T</span>
                     </div>
-                    <div class="gauge-wrapper">
-                        <div class="gauge-main"><div id="bar-m-${id}" class="fill-bar" style="background:${AppSettings.NORMAL_COLOR};"></div></div>
-                        <div class="gauge-extension"><div id="bar-e-${id}" class="fill-bar" style="background:${AppSettings.EXTENSION_COLOR};"></div></div>
+                    <div class="h-4 bg-slate-100 rounded-full overflow-hidden flex relative">
+                        <div id="bar-norm-${s.id}" class="h-full bg-green-500 gauge-bar" style="width: 0%"></div>
+                        <div id="bar-ext-${s.id}" class="h-full bg-red-500 gauge-bar" style="width: 0%"></div>
                     </div>
-                    <div class="gauge-sub-labels"><span>0</span><span style="margin-right:-15%">${RATED_CAPACITY.toFixed(1)}</span><span>${MAX_EXTENSION.toFixed(1)}</span></div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0</span>
+                        <span>Rated: ${s.rated}</span>
+                        <span>Max: ${s.max}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateGauge(id, val, rated, max) {
+            document.getElementById(`val-${id}`).textContent = val.toFixed(2) + ' T';
+            const normBar = document.getElementById(`bar-norm-${id}`);
+            const extBar = document.getElementById(`bar-ext-${id}`);
+            
+            normBar.classList.remove('bg-yellow-500', 'bg-green-500');
+            extBar.classList.remove('bg-red-500', 'blinking');
+
+            if (val <= rated) {
+                // الوضع الطبيعي
+                normBar.style.width = `${(val/rated)*100}%`;
+                extBar.style.width = '0%';
+                normBar.classList.add(val > rated * 0.9 ? 'bg-yellow-500' : 'bg-green-500');
+            } else {
+                // تجاوز الحد المقدر
+                normBar.style.width = '100%';
+                normBar.classList.add('bg-yellow-500');
+                
+                const extPerc = ((val - rated) / (max - rated)) * 100;
+                extBar.style.width = `${Math.min(extPerc, 100)}%`;
+                extBar.classList.add('bg-red-500');
+                
+                if(val >= max) extBar.classList.add('blinking');
+            }
+        }
+
+        // --- 7. إدخال البيانات ---
+        document.getElementById('entryForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const siloName = document.getElementById('silounSelect').value;
+            const weightInput = document.getElementById('weightInput');
+            const weight = parseFloat(weightInput.value);
+            const dateVal = document.getElementById('dateTimeInput').value;
+            
+            if (isNaN(weight) || weight < 0 || !siloName || !dateVal) {
+                alert("يرجى إدخال بيانات صحيحة.");
+                return;
+            }
+
+            // حساب الفرق
+            const prevRecs = currentSession.filter(r => r.silo === siloName).sort((a,b) => a.ts - b.ts);
+            const prevW = prevRecs.length ? parseFloat(prevRecs[prevRecs.length-1].weight) : 0;
+            const diff = prevRecs.length ? (weight - prevW).toFixed(2) : 'بداية';
+            
+            // التأكد من أن القراءة الجديدة أكبر أو تساوي القراءة السابقة
+            if (prevRecs.length && weight < prevW) {
+                if (!confirm(`تحذير: الوزن الجديد (${weight}) أقل من الوزن السابق (${prevW}). هل تريد التسجيل على أي حال؟`)) {
+                    return;
+                }
+            }
+
+
+            const record = {
+                id: Date.now(),
+                ts: new Date(dateVal).getTime(),
+                dateStr: dateVal,
+                silo: siloName,
+                weight: weight,
+                diff: diff
+            };
+
+            // إضافة السجل في موضعه الصحيح بناءً على الوقت
+            currentSession.push(record);
+            currentSession.sort((a,b) => a.ts - b.ts); 
+            
+            await db.ref(`molino_app_data/sessions/${currentUser.uid}/${record.id}`).set(record);
+            
+            updateUI();
+            renderRecords();
+            weightInput.value = '';
+            updateDateTime();
+        });
+
+        function renderRecords() {
+            const tbody = document.getElementById('recordsBody');
+            // عرض القراءات بترتيب زمني عكسي
+            tbody.innerHTML = [...currentSession].sort((a,b) => b.ts - a.ts).map(r => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 text-gray-500">${new Date(r.dateStr).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}</td>
+                    <td class="p-3 font-bold">${r.silo}</td>
+                    <td class="p-3">${r.weight.toFixed(2)}</td>
+                    <td class="p-3 ${parseFloat(r.diff) > 0 ? 'text-green-600' : parseFloat(r.diff) < 0 ? 'text-red-500' : 'text-gray-400'}">${r.diff}</td>
+                    <td class="p-3"><button onclick="deleteRec(${r.id})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteRec(id) {
+            if(!confirm('هل أنت متأكد من حذف هذه القراءة؟')) return;
+            
+            // إعادة حساب الفروقات بعد الحذف (معقد قليلاً لكن مهم)
+            const deletedRec = currentSession.find(r => r.id === id);
+            if (!deletedRec) return;
+
+            currentSession = currentSession.filter(r => r.id !== id);
+            
+            // إعادة حساب الفرق للسجل التالي
+            const nextRec = currentSession.find(r => r.ts > deletedRec.ts && r.silo === deletedRec.silo);
+            if (nextRec) {
+                const prevRecOfNext = currentSession.filter(r => r.ts < nextRec.ts && r.silo === nextRec.silo).sort((a,b) => a.ts - b.ts).pop();
+                const newPrevWeight = prevRecOfNext ? parseFloat(prevRecOfNext.weight) : 0;
+                nextRec.diff = (parseFloat(nextRec.weight) - newPrevWeight).toFixed(2);
+                // تحديث قاعدة البيانات للسجل التالي
+                await db.ref(`molino_app_data/sessions/${currentUser.uid}/${nextRec.id}`).update({ diff: nextRec.diff });
+            }
+
+
+            await db.ref(`molino_app_data/sessions/${currentUser.uid}/${id}`).remove();
+            
+            updateUI();
+            renderRecords();
+        }
+
+        // --- 8. Gemini AI (التحليل الذكي) ---
+        async function callGemini(prompt, isJson = false) {
+            // التحقق من مفتاح API
+            if (!GEMINI_API_KEY) throw new Error("GEMINI API Key is missing. Cannot connect.");
+            
+            // تنفيذ Exponential Backoff للتعامل مع أخطاء 429
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const res = await fetch(GEMINI_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if (res.status === 429) throw new Error('Too Many Requests. Try again later.');
+                    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+
+                    const data = await res.json();
+                    if (!data.candidates || data.candidates.length === 0) {
+                        throw new Error('Gemini API returned no content.');
+                    }
+                    return data.candidates[0].content.parts[0].text;
+                } catch (e) {
+                    if (i === 2) throw e;
+                    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); // انتظار 1, 2, ثم 4 ثواني
+                }
+            }
+        }
+
+        function calculateSessionSpeed(records) {
+            if (records.length < 2) return null;
+
+            const relevantRecords = records.filter(r => parseFloat(r.diff) > 0);
+            if (relevantRecords.length < 1) return 0;
+            
+            const totalDiff = relevantRecords.reduce((acc, curr) => acc + parseFloat(curr.diff), 0);
+
+            const firstTs = records[0].ts;
+            const lastTs = records[records.length - 1].ts;
+            const durationHours = (lastTs - firstTs) / (1000 * 60 * 60);
+
+            return durationHours > 0 ? (totalDiff / durationHours).toFixed(2) : totalDiff.toFixed(2);
+        }
+
+        async function analyzeCurrentSession() {
+            const btn = document.getElementById('analyzeBtn');
+            const resultDiv = document.getElementById('ai-analysis-result');
+            
+            if(currentSession.length < 2) {
+                alert("يرجى إدخال قراءتين على الأقل للتحليل.");
+                return;
+            }
+            
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader border-indigo-600 border-t-transparent w-4 h-4 ml-2"></span> جاري التحليل...';
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = "يقوم Gemini بقراءة بياناتك الآن...";
+
+            // حساب السرعة محلياً
+            const speed = calculateSessionSpeed(currentSession);
+            
+            // تجهيز البيانات للنص
+            const dataSummary = currentSession.map(r => 
+                `الخزان: ${r.silo}, الوزن: ${r.weight}T, الفرق: ${r.diff}T, الوقت: ${r.dateStr.split('T')[1]}`
+            ).join('\n');
+
+            const speedText = speed !== null ? `(السرعة المحسوبة محلياً: ${speed} طن/ساعة).` : '';
+
+            const prompt = `
+            Act as an industrial efficiency expert. Analyze this silo production data in ARABIC language.
+            Data:
+            ${dataSummary}
+            ${speedText}
+            
+            Required Output:
+            1. Calculate estimated speed (Tons/Hour) if possible. (Should be similar to ${speedText})
+            2. Give 2 strengths (نقاط قوة).
+            3. Give 2 warnings or suggestions (تنبيهات/اقتراحات).
+            Keep it professional and concise. Use proper Markdown for formatting.
+            `;
+
+            try {
+                const response = await callGemini(prompt);
+                // تنسيق الرد ليظهر بشكل جميل
+                const formatted = response.replace(/\*\*(.*?)\*\*/g, '<strong class="text-yellow-300">$1</strong>')
+                                          .replace(/\n/g, '<br>');
+                resultDiv.innerHTML = formatted;
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="text-red-300">حدث خطأ في الاتصال: ${err.message}. يرجى التحقق من المفتاح والاتصال بالإنترنت.</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+        }
+
+        async function handleChat() {
+            const input = document.getElementById('chatInput');
+            const history = document.getElementById('chatHistory');
+            const loader = document.getElementById('chat-loader');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            // إضافة رسالة المستخدم
+            history.innerHTML += `
+                <div class="flex justify-end animate-fadeIn">
+                    <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-md max-w-[85%] text-sm">${txt}</div>
                 </div>
             `;
-        }).join('');
-    }
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+            loader.classList.remove('hidden');
 
-    function updateGauge(siloName, weight) {
-        const siloSettings = AppSettings.SILOS.find(s => s.name === siloName);
-        if (!siloSettings) return;
-
-        const RATED_CAPACITY = siloSettings.ratedCapacity;
-        const MAX_EXTENSION = siloSettings.maxExtension;
-        const id = siloName.replace(/\s/g,'');
-        const w = parseFloat(weight); 
-
-        const wDisplay = document.getElementById(`w-${id}`);
-        const mBar = document.getElementById(`bar-m-${id}`);
-        const eBar = document.getElementById(`bar-e-${id}`);
-        
-        if (!wDisplay || !mBar || !eBar) return; 
-
-        wDisplay.textContent = w.toFixed(2);
-
-        if (w <= RATED_CAPACITY) {
-            mBar.style.width = `${(w/RATED_CAPACITY)*100}%`;
-            eBar.style.width = '0%';
-            mBar.style.backgroundColor = w >= (RATED_CAPACITY * 0.9) ? AppSettings.HIGH_WEIGHT_COLOR : AppSettings.NORMAL_COLOR;
-            eBar.textContent = "";
-            eBar.classList.remove('blinking');
-        } else {
-            mBar.style.width = '100%';
-            mBar.style.backgroundColor = AppSettings.HIGH_WEIGHT_COLOR; 
-            
-            const extensionRange = MAX_EXTENSION - RATED_CAPACITY;
-            const extendedWeight = w - RATED_CAPACITY;
-            const extP = (extendedWeight / extensionRange) * 100;
-            
-            eBar.style.width = `${Math.min(extP, 100)}%`;
-            eBar.textContent = "EXT";
-            eBar.style.backgroundColor = AppSettings.EXTENSION_COLOR;
-            
-            if (w >= MAX_EXTENSION) eBar.classList.add('blinking');
-            else eBar.classList.remove('blinking');
-        }
-    }
-
-    function updateAllGauges() { 
-        AppSettings.SILOS.map(s => s.name).forEach(s => updateGauge(s, lastKnownWeights[s]||0)); 
-    }
-
-    // --- معالجة إدخال البيانات ---
-    document.getElementById('entryForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const s = document.getElementById('silounSelect').value;
-        const w = parseFloat(document.getElementById('weightInput').value);
-        const dt = document.getElementById('dateTimeInput').value;
-        const newTime = new Date(dt).getTime();
-        
-        const siloSettings = AppSettings.SILOS.find(sl => sl.name === s);
-        if (w > siloSettings.maxExtension) return alert(`خطأ: الوزن يتجاوز ${siloSettings.maxExtension.toFixed(1)} طن لهذا الخزان!`);
-
-        // التحقق من الترتيب الزمني
-        if (currentSessionRecords.length > 0) {
-            const sortedRecords = [...currentSessionRecords].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-            const lastRecordedTime = new Date(sortedRecords[0].dateTime).getTime();
-            if (newTime < lastRecordedTime) {
-                alert(`خطأ زمني: لا يمكن إدخال قراءة سابقة لوقت آخر سجل.`);
-                return; 
-            }
-        }
-        
-        const prev = lastKnownWeights[s] || 0;
-        let diff = 'بداية';
-        // إذا كان هناك سجل سابق لنفس الخزان في الجلسة
-        if (currentSessionRecords.some(r => r.siloun === s) || prev > 0) {
-             diff = (w - prev).toFixed(2);
-        }
-
-        currentSessionRecords.push({ id: Date.now(), dateTime: dt, siloun: s, weight: w.toFixed(2), difference: diff });
-        lastKnownWeights[s] = w;
-        
-        await saveUserSessionData(); // حفظ في السحابة
-        
-        renderRecords();
-        updateGauge(s, w);
-        performSmartAIAnalysis(); 
-        
-        document.getElementById('weightInput').value = '';
-        updateDateTime();
-    });
-
-    function renderRecords() {
-        const tb = document.getElementById('recordsBody');
-        tb.innerHTML = '';
-        [...currentSessionRecords].reverse().forEach(r => {
-            const diffVal = parseFloat(r.difference);
-            const diffColor = diffVal > 0 ? 'green' : (diffVal < 0 ? 'red' : 'inherit');
-            tb.innerHTML += `<tr>
-                <td>${formatDateTimeEnglish(r.dateTime)}</td>
-                <td>${r.siloun}</td>
-                <td>${r.weight}</td>
-                <td style="color:${diffColor}">${r.difference}</td>
-                <td><button class="danger-btn small-btn" onclick="deleteRecord(${r.id})">❌</button></td>
-            </tr>`;
-        });
-    }
-
-    async function deleteRecord(id) {
-        if(!confirm('حذف السجل؟')) return;
-        
-        const idx = currentSessionRecords.findIndex(r=>r.id===id);
-        if(idx===-1) return;
-        const silo = currentSessionRecords[idx].siloun;
-        currentSessionRecords.splice(idx,1);
-        
-        // إعادة حساب الفروقات لهذا الخزان
-        let siloRecs = currentSessionRecords
-            .filter(r=>r.siloun===silo)
-            .sort((a,b)=>a.id - b.id); 
-
-        siloRecs.forEach((r,i) => {
-            if(i === 0) r.difference = 'بداية'; // أو يعتمد على آخر جلسة (غير مطبق هنا للبساطة)
-            else {
-                const prevWeight = parseFloat(siloRecs[i - 1].weight);
-                r.difference = (parseFloat(r.weight) - prevWeight).toFixed(2);
-            }
-        });
-        
-        lastKnownWeights[silo] = siloRecs.length ? parseFloat(siloRecs[siloRecs.length-1].weight) : 0;
-        
-        await saveUserSessionData();
-        renderRecords();
-        updateAllGauges();
-        performSmartAIAnalysis();
-    }
-
-    // --- الذكاء الاصطناعي والتحليل ---
-    function performSmartAIAnalysis() {
-        const insightsList = document.getElementById('aiInsightsList');
-        const aiSpeed = document.getElementById('aiSpeed');
-        const aiTotal = document.getElementById('aiTotal');
-        const aiBestDay = document.getElementById('aiBestDay');
-        const liveStatus = document.getElementById('liveStatus');
-        const compBar = document.getElementById('compBar');
-        const compText = document.getElementById('compText');
-        const compMessage = document.getElementById('compMessage');
-
-        if (currentSessionRecords.length === 0) {
-            aiSpeed.textContent = "0.0";
-            aiTotal.textContent = "0.00";
-            liveStatus.textContent = "بداية 💤";
-            liveStatus.style.background = "#999";
-            liveStatus.style.color = "white";
-            insightsList.innerHTML = '<li>يرجى إدخال بيانات لبدء التحليل...</li>';
-            compBar.style.width = '0%';
-            compText.textContent = '0%';
-            return;
-        }
-
-        insightsList.innerHTML = '';
-        let insights = [];
-        let totalCurrent = 0;
-        
-        currentSessionRecords.forEach(r => {
-            const v = parseFloat(r.difference);
-            if(v > 0) totalCurrent += v; 
-        });
-        aiTotal.textContent = totalCurrent.toFixed(2);
-
-        // تحميل الأرشيف للمقارنة
-        loadUserHistory().then(history => {
-            let maxHistTotal = 0;
-            let bestDateStr = 'لا يوجد';
-            let histTotals = [];
-            
-            history.forEach(h => {
-                const t = parseFloat(h.total);
-                histTotals.push(t);
-                if(t > maxHistTotal) {
-                    maxHistTotal = t;
-                    bestDateStr = formatDateOnly(h.date); 
-                }
-            });
-            aiBestDay.textContent = maxHistTotal > 0 ? `${maxHistTotal} (${bestDateStr})` : '-';
-            
-            // شريط التقدم
-            if (histTotals.length > 0) {
-                const avgHist = histTotals.reduce((a,b)=>a+b,0) / histTotals.length;
-                const ratio = (totalCurrent / (avgHist || 1)) * 100;
-                compBar.style.width = `${Math.min(ratio, 100)}%`;
-                compText.textContent = `${ratio.toFixed(0)}%`;
-                if(ratio > 100) { compBar.style.backgroundColor = '#28a745'; compMessage.textContent = 'ممتاز! أعلى من المعدل.'; }
-                else if(ratio > 50) { compBar.style.backgroundColor = '#17a2b8'; compMessage.textContent = 'أداء جيد.'; }
-                else { compBar.style.backgroundColor = '#ffc107'; compMessage.textContent = 'أقل من المعدل.'; }
-            }
-        });
-
-        // حساب السرعة والتوقعات
-        if (currentSessionRecords.length > 1) {
-            const sorted = [...currentSessionRecords].sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
-            const startTime = new Date(sorted[0].dateTime);
-            const endTime = new Date(sorted[sorted.length-1].dateTime);
-            const durationHrs = (endTime - startTime) / 3600000; 
-            
-            if (durationHrs > 0.1) { 
-                const speed = totalCurrent / durationHrs;
-                aiSpeed.textContent = speed.toFixed(1);
-                liveStatus.textContent = "يعمل ⚡";
-                liveStatus.style.background = "#4caf50";
-                liveStatus.style.color = "white";
+            try {
+                const response = await callGemini("User is asking in Arabic about Molino Silo System or general technical advice: " + txt);
+                const formatted = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                 
-                currentAiAnalysis.speed = speed.toFixed(1);
-                currentAiAnalysis.duration = durationHrs.toFixed(2);
-            }
-
-            // فحص آخر تسجيلين للتوقع
-            const lastRec = sorted[sorted.length-1];
-            const prevRec = sorted[sorted.length-2];
-            
-            if (lastRec.siloun === prevRec.siloun) {
-                const silo = AppSettings.SILOS.find(s => s.name === lastRec.siloun);
-                if (silo) {
-                    const timeDiff = (new Date(lastRec.dateTime) - new Date(prevRec.dateTime)) / 3600000;
-                    const wDiff = parseFloat(lastRec.weight) - parseFloat(prevRec.weight);
-                    
-                    if (timeDiff > 0 && wDiff > 0.5) {
-                        const rate = wDiff / timeDiff; // طن/ساعة للخزان المحدد
-                        const remaining = silo.ratedCapacity - parseFloat(lastRec.weight);
-                        if (remaining > 0 && rate > 0) {
-                            const hrsLeft = remaining / rate;
-                            const finishTime = new Date(endTime.getTime() + (hrsLeft * 3600000));
-                            insights.push(`⏱️ **توقع:** سيمتلئ ${silo.name} حوالي الساعة ${finishTime.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`);
-                        }
-                    }
-                }
-            }
-            
-            // تنبيه التوقف
-            const minsSince = (new Date() - endTime) / 60000;
-            if (minsSince > 30) {
-                insights.push(`⚠️ **تنبيه:** الطحن متوقف منذ ${minsSince.toFixed(0)} دقيقة.`);
-                liveStatus.textContent = "متوقف 💤";
-                liveStatus.style.background = "#dc3545"; 
+                history.innerHTML += `
+                    <div class="flex justify-start animate-fadeIn">
+                        <div class="bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-sm leading-relaxed">
+                            <i class="fa-solid fa-robot text-blue-500 ml-1"></i> ${formatted}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                history.innerHTML += `<div class="text-center text-xs text-red-400 my-2">فشل الاتصال بالمساعد: ${err.message}</div>`;
+            } finally {
+                loader.classList.add('hidden');
+                history.scrollTop = history.scrollHeight;
             }
         }
 
-        // تحذيرات السعات
-        AppSettings.SILOS.forEach(silo => {
-            const w = lastKnownWeights[silo.name] || 0;
-            if (w >= silo.maxExtension) insights.push(`🛑 **خطر:** ${silo.name} ممتلئ تماماً (${w}T)!`);
-            else if (w > silo.ratedCapacity) insights.push(`🚨 **تحذير:** ${silo.name} في وضع التمديد.`);
-        });
-
-        currentAiAnalysis.total = totalCurrent.toFixed(2);
-        currentAiAnalysis.insights = insights.map(i => i.replace(/\*\*(.*?)\*\*/g, '$1'));
-
-        if (insights.length === 0) insights.push("✅ النظام مستقر.");
-        insightsList.innerHTML = insights.map(i => `<li>${i.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`).join('');
-    }
-
-    // ==========================================
-    // ⚙️ إعدادات النظام (Settings UI)
-    // ==========================================
-
-    function showSettingsModal() {
-        document.getElementById('settingsModal').style.display = 'block';
-        document.getElementById('blinkSpeedInput').value = AppSettings.BLINK_SPEED;
-        document.getElementById('highWeightColorInput').value = AppSettings.HIGH_WEIGHT_COLOR;
-        document.getElementById('extensionColorInput').value = AppSettings.EXTENSION_COLOR;
-        
-        renderSiloSettings();
-
-        // التحقق من صلاحيات المسؤول
-        const saveBtn = document.getElementById('saveSettingsBtn');
-        const warning = document.getElementById('admin-access-warning');
-        
-        if (currentUserEmail !== ADMIN_EMAIL) {
-            saveBtn.disabled = true;
-            saveBtn.style.backgroundColor = '#ccc';
-            saveBtn.textContent = '💾 حفظ (متاح للمسؤول فقط)';
-            warning.style.display = 'block';
-        } else {
-            saveBtn.disabled = false;
-            saveBtn.style.backgroundColor = '#28a745';
-            saveBtn.textContent = '💾 حفظ الإعدادات (Cloud)';
-            warning.style.display = 'none';
+        // --- 9. الوظائف المساعدة والإعدادات ---
+        function updateSiloSelect() {
+            const sel = document.getElementById('silounSelect');
+            sel.innerHTML = appSettings.SILOS.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
         }
-    }
 
-    function hideSettingsModal() {
-        document.getElementById('settingsModal').style.display = 'none';
-    }
-
-    function renderSiloSettings() {
-        const container = document.getElementById('siloSettingsContainer');
-        container.innerHTML = AppSettings.SILOS.map((silo, index) => `
-            <div class="silo-settings-row">
-                <div class="silo-name-input">
-                    <label>الخزان ${index+1}:</label>
-                    <input type="text" value="${silo.name}" id="silo-name-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
+        function renderSiloSettingsInputs() {
+            const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+            const container = document.getElementById('siloSettingsContainer');
+            container.innerHTML = appSettings.SILOS.map((s, i) => `
+                <div class="grid grid-cols-3 gap-2 items-center bg-slate-50 p-2 rounded">
+                    <input type="text" value="${s.name}" data-key="name" data-id="${s.id}" class="p-1 border rounded w-full text-xs text-right" ${!isAdmin ? 'disabled' : ''}>
+                    <input type="number" value="${s.rated}" data-key="rated" data-id="${s.id}" class="p-1 border rounded w-full text-xs text-left" ${!isAdmin ? 'disabled' : ''}>
+                    <input type="number" value="${s.max}" data-key="max" data-id="${s.id}" class="p-1 border rounded w-full text-xs text-left" ${!isAdmin ? 'disabled' : ''}>
                 </div>
-                <div class="silo-capacity-input">
-                    <label>السعة (T):</label>
-                    <input type="number" value="${silo.ratedCapacity}" id="silo-rated-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
-                </div>
-                <div class="silo-capacity-input">
-                    <label>Max (T):</label>
-                    <input type="number" value="${silo.maxExtension}" id="silo-max-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
-                </div>
-                ${currentUserEmail === ADMIN_EMAIL ? `<button class="danger-btn small-btn" type="button" onclick="removeSiloSetting(${silo.id})">❌</button>` : ''}
-            </div>
-        `).join('');
-    }
+            `).join('');
+        }
 
-    function addSiloSetting() {
-        if (currentUserEmail !== ADMIN_EMAIL) return alert("للمسؤول فقط.");
-        const newId = AppSettings.SILOS.reduce((max, s) => Math.max(max, s.id), 0) + 1;
-        AppSettings.SILOS.push({ id: newId, name: `New Silo ${newId}`, ratedCapacity: 50, maxExtension: 60 });
-        renderSiloSettings();
-    }
+        function addSiloField() {
+            // هذه الوظيفة تتطلب منطقاً معقداً لتوليد ID فريد وإضافته للـ SILOS
+            alert("وظيفة الإضافة غير مفعلة حالياً. يمكنك التعديل على الخزانات الموجودة فقط.");
+            // يمكن تطبيقها عبر:
+            // const newId = appSettings.SILOS.length ? Math.max(...appSettings.SILOS.map(s => s.id)) + 1 : 1;
+            // appSettings.SILOS.push({ id: newId, name: `Siloun ${newId}`, rated: 63, max: 75 });
+            // renderSiloSettingsInputs();
+        }
 
-    function removeSiloSetting(id) {
-        if (AppSettings.SILOS.length <= 1) return alert("يجب إبقاء خزان واحد.");
-        AppSettings.SILOS = AppSettings.SILOS.filter(s => s.id !== id);
-        renderSiloSettings();
-    }
+        document.getElementById('settingsForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            if(currentUser.email !== ADMIN_EMAIL) return;
 
-    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // تجميع القيم الجديدة
-        const newSilos = [];
-        AppSettings.SILOS.forEach(silo => {
-            newSilos.push({
-                id: silo.id,
-                name: document.getElementById(`silo-name-${silo.id}`).value,
-                ratedCapacity: parseFloat(document.getElementById(`silo-rated-${silo.id}`).value),
-                maxExtension: parseFloat(document.getElementById(`silo-max-${silo.id}`).value)
+            const newSilos = [];
+            const inputs = document.querySelectorAll('#siloSettingsContainer input');
+            
+            // جمع البيانات من الحقول
+            appSettings.SILOS.forEach(silo => {
+                const nameInput = document.querySelector(`input[data-key="name"][data-id="${silo.id}"]`);
+                const ratedInput = document.querySelector(`input[data-key="rated"][data-id="${silo.id}"]`);
+                const maxInput = document.querySelector(`input[data-key="max"][data-id="${silo.id}"]`);
+                
+                newSilos.push({
+                    id: silo.id,
+                    name: nameInput.value.trim(),
+                    rated: parseFloat(ratedInput.value),
+                    max: parseFloat(maxInput.value)
+                });
             });
+
+            // تحديث الإعدادات في التطبيق وقاعدة البيانات
+            appSettings.SILOS = newSilos;
+            try {
+                await db.ref('molino_app_data/settings').update({ SILOS: newSilos });
+                alert('تم حفظ إعدادات الخزانات بنجاح!');
+                // إعادة تهيئة الواجهة
+                renderGauges();
+                updateSiloSelect();
+                updateUI();
+            } catch (error) {
+                alert('حدث خطأ أثناء حفظ الإعدادات: ' + error.message);
+            }
         });
 
-        AppSettings.BLINK_SPEED = parseFloat(document.getElementById('blinkSpeedInput').value);
-        AppSettings.HIGH_WEIGHT_COLOR = document.getElementById('highWeightColorInput').value;
-        AppSettings.EXTENSION_COLOR = document.getElementById('extensionColorInput').value;
-        AppSettings.SILOS = newSilos;
 
-        const msg = document.getElementById('settingsMessage');
-        try {
-            await saveSettings();
-            msg.textContent = "✅ تم تحديث الإعدادات في السحابة بنجاح!";
-            msg.style.color = "green";
-            msg.style.display = "block";
-            applySettingsToUI();
-            setTimeout(() => { hideSettingsModal(); msg.style.display="none"; }, 2000);
-        } catch (err) {
-            msg.textContent = `❌ خطأ: ${err.message}`;
-            msg.style.color = "red";
-            msg.style.display = "block";
+        function updateDateTime() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            // يعرض التوقيت المحلي للمستخدم
+            document.getElementById('dateTimeInput').value = new Date(now.getTime() - offset).toISOString().slice(0, 16);
         }
-    });
 
-    // ==========================================
-    // 📂 الأرشيف وإنهاء العمل
-    // ==========================================
+        async function endWork() {
+            if(!currentSession.length) return alert('لا يوجد بيانات لتسجيلها.');
+            if(!confirm('هل أنت متأكد من إنهاء الجلسة وحفظها في الأرشيف؟ سيتم مسح بيانات الجلسة الحالية.')) return;
 
-    async function endWork() {
-        if (currentSessionRecords.length === 0) return alert('لا يوجد بيانات.');
-        if (!confirm('إنهاء الجلسة وحفظها؟')) return;
+            const speed = calculateSessionSpeed(currentSession);
 
-        performSmartAIAnalysis(); // تأكد من تحديث التحليل
+            const summary = {
+                date: new Date().toISOString(),
+                total: currentSession.reduce((acc, curr) => acc + (parseFloat(curr.diff) > 0 ? parseFloat(curr.diff) : 0), 0).toFixed(2),
+                speed: speed,
+                count: currentSession.length,
+                records: currentSession
+            };
 
-        const h = await loadUserHistory();
-        h.push({
-            date: new Date().toISOString(),
-            total: currentAiAnalysis.total,
-            speed: currentAiAnalysis.speed || 0,
-            aiReport: currentAiAnalysis.insights,
-            records: currentSessionRecords
-        });
-
-        await saveUserHistory(h);
-        
-        // مسح الجلسة الحالية من السحابة
-        await database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).remove();
-        
-        alert("✅ تم الحفظ بنجاح!");
-        location.reload();
-    }
-
-    async function viewHistory() {
-        document.getElementById('main-app').style.display = 'none';
-        document.getElementById('historyPage').style.display = 'block';
-        
-        const h = await loadUserHistory();
-        const tb = document.getElementById('historyBody');
-        tb.innerHTML = '';
-        
-        [...h].reverse().forEach(x => {
-            const dateStr = new Date(x.date).toLocaleDateString('en-GB');
-            // تحويل الكائن لنص لتمريره للدالة
-            const jsonStr = encodeURIComponent(JSON.stringify(x));
+            const timestamp = Date.now();
+            await db.ref(`molino_app_data/history/${currentUser.uid}/${timestamp}`).set(summary);
+            await db.ref(`molino_app_data/sessions/${currentUser.uid}`).remove();
             
-            tb.innerHTML += `<tr>
-                <td>${dateStr}</td>
-                <td>${x.total}</td>
-                <td>${x.speed || '-'}</td>
-                <td><button class="secondary-btn small-btn" onclick="showHistoryDetails('${jsonStr}')">عرض</button></td>
-            </tr>`;
-        });
-    }
+            alert('تم الحفظ بنجاح! إجمالي الإنتاج: ' + summary.total + ' طن.');
+            currentSession = [];
+            updateUI(); // لتصفير العدادات والجدول
+            renderRecords();
+            switchTab('history'); // الانتقال للأرشيف
+        }
 
-    function showHistoryDetails(encodedJson) {
-        const x = JSON.parse(decodeURIComponent(encodedJson));
-        const tb = document.getElementById('modalRecordsBody');
-        tb.innerHTML = '';
+        function loadUserHistory() {
+            const tbody = document.getElementById('historyBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><span class="loader w-4 h-4 ml-2"></span> جاري التحميل...</td></tr>';
+            
+            db.ref(`molino_app_data/history/${currentUser.uid}`).limitToLast(10).once('value').then(snap => {
+                tbody.innerHTML = '';
+                if(!snap.val()) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا يوجد أرشيف</td></tr>'; return; }
+                
+                Object.values(snap.val()).reverse().forEach(h => {
+                    const dateStr = new Date(h.date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const totalT = parseFloat(h.total).toFixed(2) || '0.00';
+                    const speedT = parseFloat(h.speed).toFixed(2) || 'N/A';
+                    
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3">${dateStr}</td>
+                            <td class="p-3 font-bold text-green-600">${totalT}</td>
+                            <td class="p-3 text-sm">${speedT} T/h</td>
+                            <td class="p-3 text-xs text-gray-400">${h.count} قراءة</td>
+                        </tr>
+                    `;
+                });
+            }).catch(error => {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500">خطأ في تحميل الأرشيف: ${error.message}</td></tr>`;
+            });
+        }
         
-        const aiSummary = document.getElementById('modalAiSummary');
-        let html = `<p><strong>الإجمالي:</strong> ${x.total} T | <strong>السرعة:</strong> ${x.speed} T/h</p>`;
-        if(x.aiReport) html += `<ul>${x.aiReport.map(i=>`<li>${i}</li>`).join('')}</ul>`;
-        aiSummary.innerHTML = html;
+        async function factoryReset() {
+            if(!currentUser || currentUser.email !== ADMIN_EMAIL) {
+                alert("لا تملك صلاحيات المسؤول لإجراء هذه العملية.");
+                return;
+            }
+            if(!confirm("تحذير خطير: هل أنت متأكد من حذف جميع بيانات المصنع (الجلسات والأرشيف)؟ لا يمكن التراجع!")) return;
+            
+            try {
+                await db.ref('molino_app_data').remove();
+                alert("تم حذف جميع البيانات وإعادة ضبط المصنع بنجاح. سيتم تسجيل الخروج الآن.");
+                logout();
+            } catch (error) {
+                alert("فشل إعادة ضبط المصنع: " + error.message);
+            }
+        }
 
-        x.records.forEach(r => {
-             tb.innerHTML += `<tr><td>${formatDateTimeEnglish(r.dateTime)}</td><td>${r.siloun}</td><td>${r.weight}</td><td>${r.difference}</td></tr>`;
-        });
-        document.getElementById('sessionDetailsModal').style.display = 'block';
-    }
+        // --- رسوم بيانية بسيطة ---
+        function showCharts() {
+            document.getElementById('chartsModal').classList.remove('hidden');
+            
+            // تدمير الرسوم البيانية القديمة قبل إنشاء الجديدة
+            if(charts.w) charts.w.destroy();
+            if(charts.d) charts.d.destroy();
 
-    function hideHistory() {
-        document.getElementById('historyPage').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-    }
+            const siloNames = appSettings.SILOS.map(s=>s.name);
+            const currentWeights = appSettings.SILOS.map(s => {
+                const recs = currentSession.filter(r => r.silo === s.name);
+                return recs.length ? parseFloat(recs[recs.length-1].weight) : 0;
+            });
 
-    async function factoryReset() {
-        if(!confirm("⚠️ تحذير: سيتم حذف جميع بياناتك (الجلسات والأرشيف) من السحابة. هل أنت متأكد؟")) return;
-        
-        await database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).remove();
-        await database.ref(DB_ROOT_PATH + 'history/' + currentUserId).remove();
-        
-        alert("تم الحذف.");
-        location.reload();
-    }
+            const ctxW = document.getElementById('chartWeights').getContext('2d');
+            charts.w = new Chart(ctxW, {
+                type: 'bar',
+                data: {
+                    labels: siloNames,
+                    datasets: [{ 
+                        label: 'الوزن الحالي (T)', 
+                        data: currentWeights, 
+                        backgroundColor: currentWeights.map((w, i) => w > appSettings.SILOS[i].rated ? '#f59e0b' : '#3b82f6')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
 
-    // ==========================================
-    // 📊 الرسوم البيانية (Charts)
-    // ==========================================
+            const ctxD = document.getElementById('chartDiff').getContext('2d');
+            const recs = [...currentSession].sort((a,b)=>a.ts-b.ts);
+            charts.d = new Chart(ctxD, {
+                type: 'line',
+                data: {
+                    labels: recs.map(r => `${new Date(r.dateStr).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})} (${r.silo})`),
+                    datasets: [{ 
+                        label: 'فروقات الوزن الإيجابية (T)', 
+                        data: recs.map(r=>parseFloat(r.diff)>0 ? parseFloat(r.diff) : 0), 
+                        borderColor: '#10b981', 
+                        tension: 0.3,
+                        pointBackgroundColor: '#10b981',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
 
-    function showChartsModal() {
-        document.getElementById('chartsModal').style.display = 'block';
-        renderAllCharts();
-    }
-    function hideChartsModal() {
-        document.getElementById('chartsModal').style.display = 'none';
-        destroyAllCharts();
-    }
-    
-    function destroyAllCharts() {
-        if (currentWeightsChart) currentWeightsChart.destroy();
-        if (currentDifferencesChart) currentDifferencesChart.destroy();
-        if (historyTotalChart) historyTotalChart.destroy();
-        if (historySpeedChart) historySpeedChart.destroy();
-    }
-
-    async function renderAllCharts() {
-        destroyAllCharts();
-        
-        // 1. الأوزان الحالية
-        const labels = AppSettings.SILOS.map(s=>s.name);
-        const dataW = labels.map(n => lastKnownWeights[n] || 0);
-        currentWeightsChart = new Chart(document.getElementById('currentWeightsChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{ label: 'الوزن الحالي', data: dataW, backgroundColor: 'rgba(54, 162, 235, 0.6)' }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        // 2. الفروقات
-        const recs = [...currentSessionRecords];
-        const labelsDiff = recs.map(r => r.dateTime.split('T')[1]);
-        const dataDiff = recs.map(r => parseFloat(r.difference));
-        currentDifferencesChart = new Chart(document.getElementById('currentDifferencesChart'), {
-            type: 'line',
-            data: {
-                labels: labelsDiff,
-                datasets: [{ label: 'الفرق', data: dataDiff, borderColor: '#ff6384', fill:false }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        // 3 & 4 الأرشيف
-        const hist = await loadUserHistory();
-        const hLabels = hist.map(h => new Date(h.date).toLocaleDateString('en-GB'));
-        const hTotal = hist.map(h => parseFloat(h.total));
-        const hSpeed = hist.map(h => parseFloat(h.speed));
-
-        historyTotalChart = new Chart(document.getElementById('historyTotalChart'), {
-            type: 'line',
-            data: { labels: hLabels, datasets: [{ label: 'الإنتاج', data: hTotal, borderColor: '#28a745', tension: 0.1 }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        historySpeedChart = new Chart(document.getElementById('historySpeedChart'), {
-            type: 'bar',
-            data: { labels: hLabels, datasets: [{ label: 'السرعة', data: hSpeed, backgroundColor: '#17a2b8' }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    // Helpers
-    function formatDateTimeEnglish(iso) {
-        if(!iso) return '-';
-        return new Date(iso).toLocaleString('en-GB', {hour12:false}).replace(',','');
-    }
-    function formatDateOnly(iso) {
-        if(!iso) return '-';
-        return new Date(iso).toLocaleDateString('en-GB');
-    }
-    function updateDateTime() {
-        const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000;
-        document.getElementById('dateTimeInput').value = new Date(now.getTime() - offset).toISOString().slice(0, 16);
-    }
-    function exportData() {
-        // تصدير بسيط للبيانات المحلية الحالية
-        const d = { session: currentSessionRecords, settings: AppSettings };
-        const blob = new Blob([JSON.stringify(d)], {type:"application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "backup.json";
-        a.click();
-    }
-    function importData(e) { alert("الاستيراد السحابي غير مفعل في هذه النسخة للحفاظ على سلامة البيانات."); }
-
-</script>
+    </script>
 </body>
 </html>
-
-
