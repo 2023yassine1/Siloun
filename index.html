@@ -6,15 +6,13 @@
     <title>Molino AI Cloud - النظام الذكي</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
@@ -36,7 +34,7 @@
 
     <div id="auth-view" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
-            <h1 class="text-3xl font-bold text-blue-600 mb-2">Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V6</span></h1>
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V7</span></h1>
             <p class="text-gray-500 mb-6">تسجيل الدخول للنظام المركزي</p>
             
             <form id="authForm" class="space-y-4">
@@ -68,7 +66,7 @@
                     <i class="fa-solid fa-gauge ml-1"></i> التحكم
                 </button>
                 <button onclick="switchTab('ai')" class="tab-btn flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-blue-500 transition" id="tab-ai">
-                    <i class="fa-solid fa-robot ml-1"></i> المساعد الذكي
+                    <i class="fa-solid fa-robot ml-1"></i> المساعد
                 </button>
                 <button onclick="switchTab('history')" class="tab-btn flex-1 py-3 px-4 text-sm font-bold text-gray-500 hover:text-blue-500 transition" id="tab-history">
                     <i class="fa-solid fa-clock-rotate-left ml-1"></i> الأرشيف
@@ -141,7 +139,7 @@
                 <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-x-10 -translate-y-10"></div>
                     <h2 class="text-2xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> تحليل الإنتاج الذكي</h2>
-                    <p class="text-indigo-100 mb-6 text-sm">يقوم Gemini بتحليل بيانات الجلسة الحالية (السرعة، الاستهلاك، التوقعات) ويعطيك تقريراً فنياً.</p>
+                    <p class="text-indigo-100 mb-6 text-sm">يقوم Gemini بتحليل بيانات الجلسة الحالية ويعطيك تقريراً فنياً.</p>
                     
                     <button onclick="analyzeCurrentSession()" id="analyzeBtn" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold py-2 px-6 rounded-full shadow-md transition flex items-center gap-2">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> تحليل الجلسة الآن
@@ -158,7 +156,7 @@
                     <div id="chatHistory" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                         <div class="flex justify-start">
                             <div class="bg-white border border-slate-200 text-slate-600 p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-sm">
-                                مرحباً بك! أنا مساعدك الذكي في نظام Molino. يمكنك سؤالي عن صيانة الخزانات، حساب الكفاءة، أو تقييم أي جدول عمل.
+                                مرحباً بك! أنا مساعدك الذكي في نظام Molino. يمكنك سؤالي عن صيانة الخزانات أو تقييم أي جدول عمل.
                             </div>
                         </div>
                     </div>
@@ -203,7 +201,7 @@
                 <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
                     <h3 class="font-bold text-lg mb-4 text-slate-700">إعدادات الخزانات (المسؤول)</h3>
                     <div id="admin-warning" class="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm hidden">
-                        <i class="fa-solid fa-lock"></i> للقراءة فقط: أنت لست المسؤول.
+                        <i class="fa-solid fa-lock"></i> للقراءة فقط: أنت لست المسؤول المخول بالتعديل.
                     </div>
                     <form id="settingsForm" class="space-y-4">
                         <div id="siloSettingsContainer" class="space-y-3"></div>
@@ -213,9 +211,18 @@
                     </form>
                 </div>
                 
+                <div id="users-management" class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 hidden">
+                    <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-blue-500"></i> إدارة المستخدمين وسجلاتهم
+                    </h3>
+                    <div id="usersListContainer" class="space-y-3">
+                        <p class="text-center text-gray-500">جاري تحميل قائمة المستخدمين...</p>
+                    </div>
+                </div>
+                
                 <div class="bg-red-50 rounded-xl p-6 border border-red-100">
                     <h3 class="font-bold text-red-700 mb-2">منطقة الخطر</h3>
-                    <p class="text-sm text-red-600 mb-4">حذف جميع البيانات من السحابة. لا يمكن التراجع عن هذا الإجراء.</p>
+                    <p class="text-sm text-red-600 mb-4">حذف جميع البيانات من السحابة.</p>
                     <button onclick="factoryReset()" class="bg-white border border-red-300 text-red-600 hover:bg-red-600 hover:text-white py-2 px-4 rounded transition text-sm">إعادة ضبط المصنع</button>
                 </div>
             </div>
@@ -230,6 +237,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-50 p-4 rounded-xl h-64"><canvas id="chartWeights"></canvas></div>
                 <div class="bg-slate-50 p-4 rounded-xl h-64"><canvas id="chartDiff"></canvas></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="userHistoryModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
+            <button onclick="document.getElementById('userHistoryModal').classList.add('hidden')" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-xl font-bold mb-4">سجلات العمل لـ <span id="modal-user-uid" class="text-blue-600 text-sm bg-blue-50 px-2 py-1 rounded"></span></h2>
+            <div id="modalHistoryContent" class="overflow-x-auto">
+                <table class="w-full text-sm text-right">
+                    <thead class="bg-slate-100 text-slate-600">
+                        <tr>
+                            <th class="p-3">التاريخ</th>
+                            <th class="p-3">الإجمالي (T)</th>
+                            <th class="p-3">السرعة (T/h)</th>
+                            <th class="p-3">عدد القراءات</th>
+                            <th class="p-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalHistoryBody" class="divide-y divide-slate-100"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -250,12 +278,11 @@
         const db = firebase.database();
 
         // --- 2. إعدادات Gemini AI ---
-        // ** تم الإصلاح هنا: تم وضع مفتاح Gemini API الذي أرسلته **
         const GEMINI_API_KEY = "AIzaSyAMvr70Ijt5ueZ8gmropQ_xq0wouo5E75Y"; 
         const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
         
-        // --- 3. المتغيرات العامة ---
-        const ADMIN_EMAIL = 'koreanarabione@gmail.com';
+        // --- 3. المتغيرات العامة (ADMIN EMAIL UPDATED) ---
+        const ADMIN_EMAIL = 'koreanarabione@gmail.com'; // ** تم التحديث ليتطابق مع قواعد الأمان **
         let currentUser = null;
         let appSettings = { 
             SILOS: [
@@ -282,13 +309,10 @@
             btn.classList.remove('text-gray-500');
             btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
             
-            // تحميل الأرشيف عند التبديل
-            if (tabId === 'history' && currentUser) {
-                loadUserHistory();
-            }
-            // إعادة عرض الإعدادات
+            if (tabId === 'history' && currentUser) loadUserHistory();
             if (tabId === 'settings' && currentUser) {
                 renderSiloSettingsInputs();
+                loadUsersAndHistory(); // ** تحديث: استدعاء دالة عرض المستخدمين **
             }
         }
 
@@ -300,6 +324,9 @@
                 document.getElementById('auth-view').classList.add('hidden');
                 document.getElementById('app-view').classList.remove('hidden');
                 document.getElementById('userEmailDisplay').textContent = user.email;
+                if(user.email === ADMIN_EMAIL) {
+                    document.getElementById('userEmailDisplay').innerHTML += ' <span class="bg-yellow-100 text-yellow-800 text-[10px] px-1 rounded border border-yellow-200">Admin</span>';
+                }
                 initializeApp();
             } else {
                 currentUser = null;
@@ -310,7 +337,7 @@
 
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
-            document.querySelector('#auth-view h1').innerHTML = isLoginMode ? 'Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V6</span>' : 'إنشاء حساب جديد';
+            document.querySelector('#auth-view h1').innerHTML = isLoginMode ? 'Molino Cloud <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">AI V7</span>' : 'إنشاء حساب جديد';
             document.querySelector('#auth-view button').textContent = isLoginMode ? 'دخول آمن' : 'تسجيل حساب';
             document.querySelector('#auth-view p.cursor-pointer').textContent = isLoginMode ? 'ليس لديك حساب؟ إنشاء حساب جديد' : 'لديك حساب بالفعل؟ دخول';
         }
@@ -341,17 +368,19 @@
             updateUI();
             updateDateTime();
             
-            // تحديث حالة المسؤول في واجهة الإعدادات
             const isAdmin = currentUser.email === ADMIN_EMAIL;
             document.getElementById('admin-warning').classList.toggle('hidden', isAdmin);
-            document.getElementById('saveSettingsBtn').disabled = !isAdmin;
-            if(!isAdmin) document.getElementById('saveSettingsBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            else document.getElementById('saveSettingsBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            saveBtn.disabled = !isAdmin;
+            if(!isAdmin) saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            else saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
         function loadSettings() {
             return db.ref('molino_app_data/settings').once('value').then(snap => {
-                if(snap.val()) appSettings = { ...appSettings, ...snap.val() };
+                if(snap.val() && snap.val().SILOS) {
+                    appSettings = { ...appSettings, ...snap.val() };
+                }
                 renderSiloSettingsInputs();
                 renderGauges();
                 updateSiloSelect();
@@ -361,14 +390,12 @@
         function loadSession() {
             return db.ref(`molino_app_data/sessions/${currentUser.uid}`).once('value').then(snap => {
                 const data = snap.val();
-                // التأكد من أن البيانات هي مصفوفة إذا كانت غير فارغة
                 currentSession = data ? Object.values(data).sort((a,b) => a.ts - b.ts) : [];
                 renderRecords();
             });
         }
 
         function updateUI() {
-            // تحديث العدادات (Gauges)
             appSettings.SILOS.forEach(silo => {
                 const recs = currentSession.filter(r => r.silo === silo.name).sort((a,b) => a.ts - b.ts);
                 const lastWeight = recs.length ? parseFloat(recs[recs.length-1].weight) : 0;
@@ -407,19 +434,15 @@
             extBar.classList.remove('bg-red-500', 'blinking');
 
             if (val <= rated) {
-                // الوضع الطبيعي
                 normBar.style.width = `${(val/rated)*100}%`;
                 extBar.style.width = '0%';
                 normBar.classList.add(val > rated * 0.9 ? 'bg-yellow-500' : 'bg-green-500');
             } else {
-                // تجاوز الحد المقدر
                 normBar.style.width = '100%';
                 normBar.classList.add('bg-yellow-500');
-                
                 const extPerc = ((val - rated) / (max - rated)) * 100;
                 extBar.style.width = `${Math.min(extPerc, 100)}%`;
                 extBar.classList.add('bg-red-500');
-                
                 if(val >= max) extBar.classList.add('blinking');
             }
         }
@@ -437,18 +460,13 @@
                 return;
             }
 
-            // حساب الفرق
             const prevRecs = currentSession.filter(r => r.silo === siloName).sort((a,b) => a.ts - b.ts);
             const prevW = prevRecs.length ? parseFloat(prevRecs[prevRecs.length-1].weight) : 0;
             const diff = prevRecs.length ? (weight - prevW).toFixed(2) : 'بداية';
             
-            // التأكد من أن القراءة الجديدة أكبر أو تساوي القراءة السابقة
             if (prevRecs.length && weight < prevW) {
-                if (!confirm(`تحذير: الوزن الجديد (${weight}) أقل من الوزن السابق (${prevW}). هل تريد التسجيل على أي حال؟`)) {
-                    return;
-                }
+                if (!confirm(`تحذير: الوزن الجديد (${weight}) أقل من الوزن السابق (${prevW}). هل تريد التسجيل على أي حال؟`)) return;
             }
-
 
             const record = {
                 id: Date.now(),
@@ -459,7 +477,6 @@
                 diff: diff
             };
 
-            // إضافة السجل في موضعه الصحيح بناءً على الوقت
             currentSession.push(record);
             currentSession.sort((a,b) => a.ts - b.ts); 
             
@@ -473,7 +490,6 @@
 
         function renderRecords() {
             const tbody = document.getElementById('recordsBody');
-            // عرض القراءات بترتيب زمني عكسي
             tbody.innerHTML = [...currentSession].sort((a,b) => b.ts - a.ts).map(r => `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-3 text-gray-500">${new Date(r.dateStr).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}</td>
@@ -487,36 +503,28 @@
 
         async function deleteRec(id) {
             if(!confirm('هل أنت متأكد من حذف هذه القراءة؟')) return;
-            
-            // إعادة حساب الفروقات بعد الحذف (معقد قليلاً لكن مهم)
             const deletedRec = currentSession.find(r => r.id === id);
             if (!deletedRec) return;
 
+            // منطق الحذف وإعادة الحساب
             currentSession = currentSession.filter(r => r.id !== id);
-            
-            // إعادة حساب الفرق للسجل التالي
             const nextRec = currentSession.find(r => r.ts > deletedRec.ts && r.silo === deletedRec.silo);
             if (nextRec) {
                 const prevRecOfNext = currentSession.filter(r => r.ts < nextRec.ts && r.silo === nextRec.silo).sort((a,b) => a.ts - b.ts).pop();
                 const newPrevWeight = prevRecOfNext ? parseFloat(prevRecOfNext.weight) : 0;
                 nextRec.diff = (parseFloat(nextRec.weight) - newPrevWeight).toFixed(2);
-                // تحديث قاعدة البيانات للسجل التالي
                 await db.ref(`molino_app_data/sessions/${currentUser.uid}/${nextRec.id}`).update({ diff: nextRec.diff });
             }
 
-
             await db.ref(`molino_app_data/sessions/${currentUser.uid}/${id}`).remove();
-            
             updateUI();
             renderRecords();
         }
 
-        // --- 8. Gemini AI (التحليل الذكي) ---
-        async function callGemini(prompt, isJson = false) {
-            // التحقق من مفتاح API
-            if (!GEMINI_API_KEY) throw new Error("GEMINI API Key is missing. Cannot connect.");
+        // --- 8. Gemini AI ---
+        async function callGemini(prompt) {
+            if (!GEMINI_API_KEY) throw new Error("API Key Missing");
             
-            // تنفيذ Exponential Backoff للتعامل مع أخطاء 429
             for (let i = 0; i < 3; i++) {
                 try {
                     const res = await fetch(GEMINI_URL, {
@@ -525,33 +533,24 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
                     
-                    if (res.status === 429) throw new Error('Too Many Requests. Try again later.');
-                    if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+                    if (res.status === 429) throw new Error('Too Many Requests');
+                    if (!res.ok) throw new Error(res.statusText);
 
                     const data = await res.json();
-                    if (!data.candidates || data.candidates.length === 0) {
-                        throw new Error('Gemini API returned no content.');
-                    }
                     return data.candidates[0].content.parts[0].text;
                 } catch (e) {
                     if (i === 2) throw e;
-                    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); // انتظار 1, 2, ثم 4 ثواني
+                    await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
                 }
             }
         }
 
         function calculateSessionSpeed(records) {
             if (records.length < 2) return null;
-
             const relevantRecords = records.filter(r => parseFloat(r.diff) > 0);
             if (relevantRecords.length < 1) return 0;
-            
             const totalDiff = relevantRecords.reduce((acc, curr) => acc + parseFloat(curr.diff), 0);
-
-            const firstTs = records[0].ts;
-            const lastTs = records[records.length - 1].ts;
-            const durationHours = (lastTs - firstTs) / (1000 * 60 * 60);
-
+            const durationHours = (records[records.length - 1].ts - records[0].ts) / (1000 * 60 * 60);
             return durationHours > 0 ? (totalDiff / durationHours).toFixed(2) : totalDiff.toFixed(2);
         }
 
@@ -559,10 +558,7 @@
             const btn = document.getElementById('analyzeBtn');
             const resultDiv = document.getElementById('ai-analysis-result');
             
-            if(currentSession.length < 2) {
-                alert("يرجى إدخال قراءتين على الأقل للتحليل.");
-                return;
-            }
+            if(currentSession.length < 2) { alert("أدخل قراءتين على الأقل."); return; }
             
             const originalBtnHtml = btn.innerHTML;
             btn.disabled = true;
@@ -570,37 +566,17 @@
             resultDiv.classList.remove('hidden');
             resultDiv.innerHTML = "يقوم Gemini بقراءة بياناتك الآن...";
 
-            // حساب السرعة محلياً
             const speed = calculateSessionSpeed(currentSession);
-            
-            // تجهيز البيانات للنص
-            const dataSummary = currentSession.map(r => 
-                `الخزان: ${r.silo}, الوزن: ${r.weight}T, الفرق: ${r.diff}T, الوقت: ${r.dateStr.split('T')[1]}`
-            ).join('\n');
+            const dataSummary = currentSession.map(r => `الخزان: ${r.silo}, الوزن: ${r.weight}T, الوقت: ${r.dateStr.split('T')[1]}`).join('\n');
+            const speedText = speed !== null ? `(السرعة المحسوبة: ${speed} طن/ساعة).` : '';
 
-            const speedText = speed !== null ? `(السرعة المحسوبة محلياً: ${speed} طن/ساعة).` : '';
-
-            const prompt = `
-            Act as an industrial efficiency expert. Analyze this silo production data in ARABIC language.
-            Data:
-            ${dataSummary}
-            ${speedText}
-            
-            Required Output:
-            1. Calculate estimated speed (Tons/Hour) if possible. (Should be similar to ${speedText})
-            2. Give 2 strengths (نقاط قوة).
-            3. Give 2 warnings or suggestions (تنبيهات/اقتراحات).
-            Keep it professional and concise. Use proper Markdown for formatting.
-            `;
+            const prompt = `Act as an industrial expert. Analyze this silo data in ARABIC:\n${dataSummary}\n${speedText}\nOutput:\n1. Estimated Speed.\n2. 2 Strengths.\n3. 2 Suggestions. Use Markdown.`;
 
             try {
                 const response = await callGemini(prompt);
-                // تنسيق الرد ليظهر بشكل جميل
-                const formatted = response.replace(/\*\*(.*?)\*\*/g, '<strong class="text-yellow-300">$1</strong>')
-                                          .replace(/\n/g, '<br>');
-                resultDiv.innerHTML = formatted;
+                resultDiv.innerHTML = response.replace(/\*\*(.*?)\*\*/g, '<strong class="text-yellow-300">$1</strong>').replace(/\n/g, '<br>');
             } catch (err) {
-                resultDiv.innerHTML = `<span class="text-red-300">حدث خطأ في الاتصال: ${err.message}. يرجى التحقق من المفتاح والاتصال بالإنترنت.</span>`;
+                resultDiv.innerHTML = `<span class="text-red-300">خطأ: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
@@ -610,35 +586,21 @@
         async function handleChat() {
             const input = document.getElementById('chatInput');
             const history = document.getElementById('chatHistory');
-            const loader = document.getElementById('chat-loader');
             const txt = input.value.trim();
             if(!txt) return;
 
-            // إضافة رسالة المستخدم
-            history.innerHTML += `
-                <div class="flex justify-end animate-fadeIn">
-                    <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-md max-w-[85%] text-sm">${txt}</div>
-                </div>
-            `;
+            history.innerHTML += `<div class="flex justify-end animate-fadeIn"><div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-md max-w-[85%] text-sm">${txt}</div></div>`;
             input.value = '';
+            document.getElementById('chat-loader').classList.remove('hidden');
             history.scrollTop = history.scrollHeight;
-            loader.classList.remove('hidden');
 
             try {
-                const response = await callGemini("User is asking in Arabic about Molino Silo System or general technical advice: " + txt);
-                const formatted = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-                
-                history.innerHTML += `
-                    <div class="flex justify-start animate-fadeIn">
-                        <div class="bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-sm leading-relaxed">
-                            <i class="fa-solid fa-robot text-blue-500 ml-1"></i> ${formatted}
-                        </div>
-                    </div>
-                `;
+                const response = await callGemini("User asking in Arabic about Molino/Silos: " + txt);
+                history.innerHTML += `<div class="flex justify-start animate-fadeIn"><div class="bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-sm leading-relaxed"><i class="fa-solid fa-robot text-blue-500 ml-1"></i> ${response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div></div>`;
             } catch (err) {
-                history.innerHTML += `<div class="text-center text-xs text-red-400 my-2">فشل الاتصال بالمساعد: ${err.message}</div>`;
+                history.innerHTML += `<div class="text-center text-xs text-red-400 my-2">فشل الاتصال: ${err.message}</div>`;
             } finally {
-                loader.classList.add('hidden');
+                document.getElementById('chat-loader').classList.add('hidden');
                 history.scrollTop = history.scrollHeight;
             }
         }
@@ -652,7 +614,7 @@
         function renderSiloSettingsInputs() {
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
             const container = document.getElementById('siloSettingsContainer');
-            container.innerHTML = appSettings.SILOS.map((s, i) => `
+            container.innerHTML = appSettings.SILOS.map(s => `
                 <div class="grid grid-cols-3 gap-2 items-center bg-slate-50 p-2 rounded">
                     <input type="text" value="${s.name}" data-key="name" data-id="${s.id}" class="p-1 border rounded w-full text-xs text-right" ${!isAdmin ? 'disabled' : ''}>
                     <input type="number" value="${s.rated}" data-key="rated" data-id="${s.id}" class="p-1 border rounded w-full text-xs text-left" ${!isAdmin ? 'disabled' : ''}>
@@ -662,12 +624,7 @@
         }
 
         function addSiloField() {
-            // هذه الوظيفة تتطلب منطقاً معقداً لتوليد ID فريد وإضافته للـ SILOS
-            alert("وظيفة الإضافة غير مفعلة حالياً. يمكنك التعديل على الخزانات الموجودة فقط.");
-            // يمكن تطبيقها عبر:
-            // const newId = appSettings.SILOS.length ? Math.max(...appSettings.SILOS.map(s => s.id)) + 1 : 1;
-            // appSettings.SILOS.push({ id: newId, name: `Siloun ${newId}`, rated: 63, max: 75 });
-            // renderSiloSettingsInputs();
+            alert("لإضافة خزانات جديدة، يرجى التعديل على بنية البيانات مباشرة من قاعدة البيانات أو طلب تحديث للكود.");
         }
 
         document.getElementById('settingsForm').addEventListener('submit', async e => {
@@ -675,50 +632,34 @@
             if(currentUser.email !== ADMIN_EMAIL) return;
 
             const newSilos = [];
-            const inputs = document.querySelectorAll('#siloSettingsContainer input');
-            
-            // جمع البيانات من الحقول
             appSettings.SILOS.forEach(silo => {
-                const nameInput = document.querySelector(`input[data-key="name"][data-id="${silo.id}"]`);
-                const ratedInput = document.querySelector(`input[data-key="rated"][data-id="${silo.id}"]`);
-                const maxInput = document.querySelector(`input[data-key="max"][data-id="${silo.id}"]`);
-                
-                newSilos.push({
-                    id: silo.id,
-                    name: nameInput.value.trim(),
-                    rated: parseFloat(ratedInput.value),
-                    max: parseFloat(maxInput.value)
-                });
+                const name = document.querySelector(`input[data-key="name"][data-id="${silo.id}"]`).value;
+                const rated = document.querySelector(`input[data-key="rated"][data-id="${silo.id}"]`).value;
+                const max = document.querySelector(`input[data-key="max"][data-id="${silo.id}"]`).value;
+                newSilos.push({ id: silo.id, name, rated: parseFloat(rated), max: parseFloat(max) });
             });
 
-            // تحديث الإعدادات في التطبيق وقاعدة البيانات
             appSettings.SILOS = newSilos;
             try {
                 await db.ref('molino_app_data/settings').update({ SILOS: newSilos });
-                alert('تم حفظ إعدادات الخزانات بنجاح!');
-                // إعادة تهيئة الواجهة
-                renderGauges();
-                updateSiloSelect();
-                updateUI();
+                alert('تم حفظ الإعدادات!');
+                renderGauges(); updateSiloSelect(); updateUI();
             } catch (error) {
-                alert('حدث خطأ أثناء حفظ الإعدادات: ' + error.message);
+                alert('خطأ: ' + error.message);
             }
         });
-
 
         function updateDateTime() {
             const now = new Date();
             const offset = now.getTimezoneOffset() * 60000;
-            // يعرض التوقيت المحلي للمستخدم
             document.getElementById('dateTimeInput').value = new Date(now.getTime() - offset).toISOString().slice(0, 16);
         }
 
         async function endWork() {
-            if(!currentSession.length) return alert('لا يوجد بيانات لتسجيلها.');
-            if(!confirm('هل أنت متأكد من إنهاء الجلسة وحفظها في الأرشيف؟ سيتم مسح بيانات الجلسة الحالية.')) return;
+            if(!currentSession.length) return alert('لا يوجد بيانات.');
+            if(!confirm('هل أنت متأكد من إنهاء الجلسة؟')) return;
 
             const speed = calculateSessionSpeed(currentSession);
-
             const summary = {
                 date: new Date().toISOString(),
                 total: currentSession.reduce((acc, curr) => acc + (parseFloat(curr.diff) > 0 ? parseFloat(curr.diff) : 0), 0).toFixed(2),
@@ -731,61 +672,48 @@
             await db.ref(`molino_app_data/history/${currentUser.uid}/${timestamp}`).set(summary);
             await db.ref(`molino_app_data/sessions/${currentUser.uid}`).remove();
             
-            alert('تم الحفظ بنجاح! إجمالي الإنتاج: ' + summary.total + ' طن.');
+            alert('تم الحفظ. إجمالي: ' + summary.total + ' طن.');
             currentSession = [];
-            updateUI(); // لتصفير العدادات والجدول
-            renderRecords();
-            switchTab('history'); // الانتقال للأرشيف
+            updateUI(); renderRecords(); switchTab('history');
         }
 
         function loadUserHistory() {
+            // هذه الدالة تعرض سجلات المستخدم الحالي فقط
             const tbody = document.getElementById('historyBody');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><span class="loader w-4 h-4 ml-2"></span> جاري التحميل...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><span class="loader w-4 h-4 ml-2"></span></td></tr>';
             
             db.ref(`molino_app_data/history/${currentUser.uid}`).limitToLast(10).once('value').then(snap => {
                 tbody.innerHTML = '';
-                if(!snap.val()) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا يوجد أرشيف</td></tr>'; return; }
+                if(!snap.val()) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">فارغ</td></tr>'; return; }
                 
                 Object.values(snap.val()).reverse().forEach(h => {
-                    const dateStr = new Date(h.date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
-                    const totalT = parseFloat(h.total).toFixed(2) || '0.00';
-                    const speedT = parseFloat(h.speed).toFixed(2) || 'N/A';
-                    
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50">
-                            <td class="p-3">${dateStr}</td>
-                            <td class="p-3 font-bold text-green-600">${totalT}</td>
-                            <td class="p-3 text-sm">${speedT} T/h</td>
+                            <td class="p-3">${new Date(h.date).toLocaleDateString('ar-SA')}</td>
+                            <td class="p-3 font-bold text-green-600">${parseFloat(h.total).toFixed(2)}</td>
+                            <td class="p-3 text-sm">${h.speed || 'N/A'} T/h</td>
                             <td class="p-3 text-xs text-gray-400">${h.count} قراءة</td>
-                        </tr>
-                    `;
+                            <td class="p-3"><button onclick="viewDetails('${currentUser.uid}', ${new Date(h.date).getTime()})" class="text-blue-500 hover:text-blue-700 text-xs">عرض</button></td>
+                        </tr>`;
                 });
-            }).catch(error => {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500">خطأ في تحميل الأرشيف: ${error.message}</td></tr>`;
             });
         }
         
         async function factoryReset() {
             if(!currentUser || currentUser.email !== ADMIN_EMAIL) {
-                alert("لا تملك صلاحيات المسؤول لإجراء هذه العملية.");
+                alert("للأسف، هذا الإجراء للمسؤول فقط.");
                 return;
             }
-            if(!confirm("تحذير خطير: هل أنت متأكد من حذف جميع بيانات المصنع (الجلسات والأرشيف)؟ لا يمكن التراجع!")) return;
-            
+            if(!confirm("تحذير: سيتم حذف كل شيء! هل أنت متأكد؟")) return;
             try {
                 await db.ref('molino_app_data').remove();
-                alert("تم حذف جميع البيانات وإعادة ضبط المصنع بنجاح. سيتم تسجيل الخروج الآن.");
+                alert("تم التصفير. سيتم الخروج.");
                 logout();
-            } catch (error) {
-                alert("فشل إعادة ضبط المصنع: " + error.message);
-            }
+            } catch (error) { alert("فشل الحذف: " + error.message); }
         }
 
-        // --- رسوم بيانية بسيطة ---
         function showCharts() {
             document.getElementById('chartsModal').classList.remove('hidden');
-            
-            // تدمير الرسوم البيانية القديمة قبل إنشاء الجديدة
             if(charts.w) charts.w.destroy();
             if(charts.d) charts.d.destroy();
 
@@ -798,19 +726,8 @@
             const ctxW = document.getElementById('chartWeights').getContext('2d');
             charts.w = new Chart(ctxW, {
                 type: 'bar',
-                data: {
-                    labels: siloNames,
-                    datasets: [{ 
-                        label: 'الوزن الحالي (T)', 
-                        data: currentWeights, 
-                        backgroundColor: currentWeights.map((w, i) => w > appSettings.SILOS[i].rated ? '#f59e0b' : '#3b82f6')
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
+                data: { labels: siloNames, datasets: [{ label: 'الوزن الحالي (T)', data: currentWeights, backgroundColor: '#3b82f6' }] },
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
             const ctxD = document.getElementById('chartDiff').getContext('2d');
@@ -819,23 +736,92 @@
                 type: 'line',
                 data: {
                     labels: recs.map(r => `${new Date(r.dateStr).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})} (${r.silo})`),
-                    datasets: [{ 
-                        label: 'فروقات الوزن الإيجابية (T)', 
-                        data: recs.map(r=>parseFloat(r.diff)>0 ? parseFloat(r.diff) : 0), 
-                        borderColor: '#10b981', 
-                        tension: 0.3,
-                        pointBackgroundColor: '#10b981',
-                        borderWidth: 2
-                    }]
+                    datasets: [{ label: 'الفروقات (T)', data: recs.map(r=>parseFloat(r.diff)>0 ? parseFloat(r.diff) : 0), borderColor: '#10b981', tension: 0.3 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
+        
+        // ====================================================================
+        // ** وظائف الإدارة للمشرف (تمت إضافتها) **
+        // ====================================================================
 
+        async function loadUsersAndHistory() {
+            const isAdmin = currentUser.email === ADMIN_EMAIL;
+            const usersDiv = document.getElementById('users-management');
+            const container = document.getElementById('usersListContainer');
+            
+            usersDiv.classList.toggle('hidden', !isAdmin);
+            if (!isAdmin) return;
+            
+            container.innerHTML = '<div class="text-center p-4"><span class="loader w-6 h-6"></span> جاري تحميل بيانات المستخدمين...</div>';
+
+            try {
+                // سحب جميع سجلات التاريخ (مسموح الآن بقواعد الأمان الجديدة)
+                const historySnap = await db.ref('molino_app_data/history').once('value');
+                const allHistory = historySnap.val() || {};
+                
+                let html = '';
+                const uids = Object.keys(allHistory);
+                
+                if (uids.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 p-4">لا يوجد سجلات عمل للمستخدمين الآخرين بعد.</p>';
+                    return;
+                }
+
+                for (const uid of uids) {
+                    const sessions = Object.values(allHistory[uid] || {}).sort((a,b) => b.date.localeCompare(a.date));
+                    const lastSession = sessions[0];
+                    // عرض UID بدلاً من الإيميل لعدم توفر API لسحب الإيميل بالـ UID في الطرفية
+                    const displayName = "UID: " + uid.substring(0, 10) + '...'; 
+
+                    html += `
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <strong class="text-slate-800 text-sm">${displayName}</strong>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${sessions.length} جلسة</span>
+                            </div>
+                            <p class="text-xs text-gray-500">آخر عمل: ${lastSession ? new Date(lastSession.date).toLocaleDateString('ar-SA') : 'لا يوجد'}</p>
+                            <p class="text-xs text-gray-500">إجمالي آخر جلسة: <span class="font-bold text-green-600">${lastSession ? parseFloat(lastSession.total).toFixed(2) + ' T' : '0.00 T'}</span></p>
+                            <button onclick="viewDetails('${uid}')" class="mt-2 text-blue-500 hover:text-blue-700 text-xs font-bold">عرض جميع السجلات <i class="fa-solid fa-arrow-left ml-1"></i></button>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `<p class="text-red-500 text-center p-4">خطأ في جلب البيانات: ${error.message}</p>`;
+            }
+        }
+        
+        async function viewDetails(uid) {
+            document.getElementById('modal-user-uid').textContent = uid.substring(0, 15) + '...';
+            const tbody = document.getElementById('modalHistoryBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><span class="loader w-4 h-4 ml-2"></span> جاري تحميل السجلات...</td></tr>';
+            document.getElementById('userHistoryModal').classList.remove('hidden');
+
+            const snap = await db.ref(`molino_app_data/history/${uid}`).once('value');
+            const historyData = snap.val();
+            
+            tbody.innerHTML = '';
+            if(!historyData) { 
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا يوجد سجلات لهذا المستخدم.</td></tr>'; 
+                return;
+            }
+            
+            Object.values(historyData).reverse().forEach(h => {
+                // عرض تفاصيل كل جلسة عمل للمشرف
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">${new Date(h.date).toLocaleDateString('ar-SA')}</td>
+                        <td class="p-3 font-bold text-green-600">${parseFloat(h.total).toFixed(2)}</td>
+                        <td class="p-3 text-sm">${h.speed || 'N/A'} T/h</td>
+                        <td class="p-3 text-xs text-gray-400">${h.count} قراءة</td>
+                        <td class="p-3 text-gray-400 text-xs">تفاصيل القراءات (${h.records.length} خطوة)</td>
+                    </tr>`;
+            });
+        }
     </script>
 </body>
 </html>
