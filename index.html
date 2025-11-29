@@ -3,634 +3,1213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق Molino للتحكم والمراقبة</title>
-    <!-- تحميل Tailwind CSS للستايل -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-dark': '#1e3a8a',
-                        'primary-light': '#3b82f6',
-                        'secondary-green': '#10b981',
-                        'secondary-red': '#ef4444',
-                        'bg-dark': '#0f172a',
-                        'card-bg': '#1e293b',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
+    <title>TOTAL SILOUN MOLINO - Smart AI V4.5 (Firebase Cloud)</title>
+    
+    <!-- مكتبة Chart.js للرسوم البيانية -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <!-- ⚙️ مكتبات Firebase (Version 8 Compat for easy use) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <link rel="manifest" href="molino_app.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#3498db">
+
     <style>
-        /* الخط الأساسي */
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        /* تصميم Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #1e3a8a; }
-        /* أنماط البطاقات */
-        .card {
-            background-color: #1e293b;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            border-radius: 0.75rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+        /* --- تنسيقات أساسية --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; color: #333; text-align: right; }
+        .container { padding: 25px; max-width: 700px; margin: 20px auto; background-color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 12px; }
+        h1 { border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; text-align: center; color: #2c3e50; }
+        h2 { font-size: 1.2rem; margin-top: 25px; margin-bottom: 15px; border-right: 4px solid #3498db; padding-right: 10px; color: #2c3e50; }
+        
+        /* --- المدخلات والأزرار --- */
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: 'Segoe UI', sans-serif; }
+        input[type="number"] { direction: ltr; text-align: right; }
+        button { background-color: #28a745; color: white; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #218838; transform: translateY(-1px); }
+        .secondary-btn { background-color: #6c757d; }
+        .danger-btn { background-color: #dc3545; }
+        .reset-btn { background-color: #8b0000; color: #ffcccc; margin-top: 10px; border: 1px solid #5a0000;} 
+        .small-btn { width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
+        .input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .input-group input, .input-group select { margin-bottom: 0; }
+
+        /* --- الجداول --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #e9ecef; padding: 8px; text-align: center; }
+        th { background-color: #3498db; color: white; }
+        td { direction: ltr; unicode-bidi: embed; }
+
+        /* --- تصميم المؤشرات (Gauges) --- */
+        .gauge-container { margin-bottom: 20px; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa; }
+        .gauge-labels { display: flex; justify-content: space-between; direction: ltr; margin-bottom: 8px; }
+        .gauge-wrapper { display: flex; align-items: center; gap: 4px; height: 30px; }
+        .gauge-main { flex-grow: 1; background-color: #e9ecef; border-radius: 6px 0 0 6px; height: 100%; overflow: hidden; position: relative; }
+        .gauge-extension { width: 20%; background-color: #dedede; border-radius: 0 6px 6px 0; height: 100%; overflow: hidden; position: relative; border-left: 2px dashed #bbb; }
+        .fill-bar { height: 100%; width: 0%; transition: width 0.6s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold; }
+        .gauge-sub-labels { display: flex; justify-content: space-between; font-size: 10px; color: #777; margin-top: 4px; }
+        .blinking { animation: blinker var(--blink-speed) linear infinite; } @keyframes blinker { 50% { opacity: 0.7; } }
+
+        /* --- بطاقة الذكاء الاصطناعي (AI Analysis) --- */
+        #ai-card { background: linear-gradient(135deg, #f0f9ff 0%, #e1f5fe 100%); border: 1px solid #b3e5fc; border-radius: 10px; overflow: hidden; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .ai-header { background-color: #0288d1; color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .ai-body { padding: 15px; }
+        
+        /* شبكة الإحصائيات */
+        .ai-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .ai-stat-box { background: white; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #b3e5fc; }
+        .ai-value { display: block; font-size: 1.1rem; font-weight: bold; color: #0277bd; font-family: sans-serif; }
+        .ai-label { font-size: 0.75rem; color: #546e7a; }
+
+        /* قائمة التوصيات */
+        .ai-insights { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
+        .ai-insights li { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: flex-start; gap: 8px; background: rgba(255,255,255,0.6); margin-bottom: 5px; border-radius: 4px; }
+        .ai-insights li:last-child { border-bottom: none; }
+        
+        /* مقارنة الأداء */
+        .performance-bar-container { margin-top: 15px; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 6px; }
+        .perf-title { font-size: 0.85rem; color: #455a64; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .perf-progress-bg { height: 8px; background: #cfd8dc; border-radius: 4px; overflow: hidden; }
+        .perf-progress-fill { height: 100%; background: #4caf50; width: 0%; transition: width 1s; }
+
+        /* قسم الإدارة */
+        .backup-section { background-color: #f1f1f1; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ccc; }
+        
+        /* تنسيقات صفحة المصادقة */
+        #auth-page { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #3498db; }
+        .auth-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 90%; max-width: 400px; text-align: center; }
+        
+        /* تنسيقات صفحة الرسوم البيانية المنفصل (Modal) */
+        .charts-modal, .settings-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
+        .charts-content, .settings-content { background-color: #fefefe; margin: 2% auto; padding: 20px; width: 95%; max-width: 700px; border-radius: 12px; }
+        .charts-content h2 { border-right: 4px solid #ffeb3b; color: #795548; }
+        .settings-content h2 { border-right: 4px solid #f44336; color: #f44336; }
+        .chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 25px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .chart-container h4 { text-align: center; color: #795548; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 10px;}
+
+        /* زر قائمة الخيارات في الأعلى (الثلاث نقاط) */
+        .options-menu-btn { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            font-size: 24px; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            color: #333; 
+            width: auto; 
+            padding: 5px;
+            margin-bottom: 0;
         }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+
+        /* تنسيقات صفحة الإعدادات (خاص) */
+        #settingsForm label { display: block; font-weight: bold; margin-bottom: 5px; margin-top: 10px; }
+        .silo-settings-row { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            align-items: center; 
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #fafafa;
+            flex-wrap: wrap;
         }
-        /* تأثيرات التحميل (Loading Effect) */
-        .loading-pulse {
-            animation: pulse 1.5s infinite;
+        .silo-settings-row > div { 
+            flex: 1 1 45%; /* يسمح للعناصر بالنمو والتكدس */
+            min-width: 150px;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .silo-settings-row input[type="text"], .silo-settings-row input[type="number"] {
+            margin-bottom: 0;
+            padding: 8px;
+            width: 100%;
         }
-        /* نمط الزر الرئيسي */
-        .main-button {
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .silo-settings-row .silo-name-input {
+            flex: 1 1 100%;
         }
-        .main-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        .silo-settings-row .silo-capacity-input {
+            display: flex;
+            align-items: center;
+        }
+        .silo-settings-row .silo-capacity-input span {
+            flex-shrink: 0;
+            margin-right: 5px;
         }
     </style>
 </head>
-<body class="text-white min-h-screen p-4 md:p-8">
+<body>
 
-    <!-- شريط التنقل العلوي -->
-    <header class="flex justify-between items-center pb-6 border-b border-gray-700 mb-6">
-        <h1 class="text-3xl font-extrabold text-primary-light">نظام Molino</h1>
-        <div id="user-info" class="text-sm flex items-center space-x-2 space-x-reverse">
-            <!-- سيتم عرض معرّف المستخدم (UID) هنا -->
-            <span class="text-gray-400">المستخدم:</span>
-            <span id="user-id" class="font-mono bg-card-bg px-2 py-1 rounded-full text-xs truncate max-w-[150px] md:max-w-none loading-pulse">جاري التحميل...</span>
+<!-- شاشة المصادقة -->
+<div id="auth-page">
+    <div class="auth-box">
+        <h2 id="auth-title">تسجيل الدخول (Firebase) 👋</h2>
+        <form id="authForm">
+            <label style="display: block; text-align: right; margin-bottom: 5px;">البريد الإلكتروني:</label>
+            <input type="email" id="emailInput" required placeholder="name@example.com">
+            
+            <label style="display: block; text-align: right; margin-bottom: 5px;">كلمة المرور:</label>
+            <input type="password" id="passwordInput" required placeholder="كلمة المرور">
+            
+            <p id="authMessage" class="auth-message" style="display: none; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-weight: bold;"></p>
+            
+            <button type="submit" id="authButton">دخول</button>
+            <span id="toggleAuth" class="toggle-link" style="color: #3498db; cursor: pointer; text-decoration: underline;" onclick="toggleAuthMode()">إنشاء حساب جديد</span>
+        </form>
+    </div>
+</div>
+
+<!-- التطبيق الرئيسي -->
+<div id="main-app" class="container" style="display:none;">
+    <button class="options-menu-btn" onclick="showSettingsModal()">⚙️</button>
+    
+    <h1>🏭 TOTAL SILOUN MOLINO <span style="font-size:0.5em; color:#777;">AI Cloud V5.0</span></h1>
+    <div style="text-align: left; margin-bottom: 15px;">
+        <span style="font-size: 0.8em; color: #666;">مرحباً بك، <strong id="loggedInUser"></strong></span>
+        <button class="danger-btn small-btn" onclick="logout()" style="width: auto; margin-right: 10px;">خروج</button>
+    </div>
+
+    <hr>
+    
+    <h2>📝 تسجيل البيانات</h2>
+    <form id="entryForm">
+        <label>اختيار الخزان:</label>
+        <select id="silounSelect" required>
+            <!-- سيتم ملؤها ديناميكياً -->
+        </select>
+
+        <label>الوزن الحالي (<span id="maxWeightDisplay">Max T</span>):</label>
+        <input type="number" id="weightInput" min="0" step="0.01" required placeholder="مثال: 64.50">
+        
+        <label>وقت التسجيل:</label>
+        <input type="datetime-local" id="dateTimeInput" required>
+
+        <button type="submit">✅ تسجيل القراءة (سحابي)</button>
+    </form>
+    
+    <hr>
+
+    <h2>📊 حالة الخزانات (مباشر)</h2>
+    <div id="gauges"></div>
+    
+    <div id="ai-card">
+        <div class="ai-header">
+            <span>🤖 التحليل الذكي للأداء</span>
+            <span id="liveStatus" style="font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">جاري الاتصال...</span>
         </div>
-    </header>
-
-    <main id="app-content" class="space-y-6">
-
-        <!-- لوحة التحكم الحالية (Current Session Panel) -->
-        <section class="card p-5">
-            <h2 class="text-xl font-bold mb-4 text-primary-light flex items-center space-x-2 space-x-reverse">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.414L11 9.586V6z" clip-rule="evenodd" />
-                </svg>
-                الجلسة الحالية
-            </h2>
-            
-            <div id="current-session-data" class="grid grid-cols-2 gap-4 text-sm mb-6">
-                <!-- بيانات الحالة الحالية -->
-                <div class="bg-gray-800 p-3 rounded-md">
-                    <p class="text-gray-400">الحالة:</p>
-                    <p id="session-status" class="font-bold text-secondary-red">متوقفة</p>
+        <div class="ai-body">
+            <div class="ai-stats-grid">
+                <div class="ai-stat-box">
+                    <span class="ai-value" id="aiSpeed">0.0</span>
+                    <span class="ai-label">السرعة (طن/ساعة)</span>
                 </div>
-                <div class="bg-gray-800 p-3 rounded-md">
-                    <p class="text-gray-400">وقت البدء:</p>
-                    <p id="start-time" class="font-bold">غير محدد</p>
+                <div class="ai-stat-box">
+                    <span class="ai-value" id="aiTotal">0.00</span>
+                    <span class="ai-label">إنتاج الجلسة</span>
                 </div>
-                <div class="bg-gray-800 p-3 rounded-md col-span-2">
-                    <p class="text-gray-400">كمية الإنتاج (الوقت الحالي):</p>
-                    <p id="current-production" class="text-2xl font-extrabold text-secondary-green loading-pulse">0 كغم</p>
+                <div class="ai-stat-box">
+                    <span class="ai-value" id="aiBestDay">-</span>
+                    <span class="ai-label">أفضل يوم (سابق)</span>
                 </div>
             </div>
 
-            <!-- أزرار التحكم -->
-            <div class="flex flex-col space-y-3">
-                <button id="start-session-btn" 
-                        class="main-button bg-secondary-green hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg w-full disabled:opacity-50"
-                        disabled>
-                    بدء جلسة جديدة
-                </button>
-                <button id="stop-session-btn" 
-                        class="main-button bg-secondary-red hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg w-full disabled:opacity-50"
-                        disabled>
-                    إنهاء الجلسة وحفظ الأرشيف
-                </button>
-            </div>
-        </section>
-
-        <!-- لوحة إعدادات المصنع (ADMIN ONLY) -->
-        <section class="card p-5">
-            <h2 class="text-xl font-bold mb-4 text-primary-light flex items-center space-x-2 space-x-reverse">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM17 4a1 1 0 10-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4z" />
-                </svg>
-                إعدادات المصنع (للمسؤول فقط)
-            </h2>
-            
-            <div id="admin-panel" class="space-y-4" style="display: none;">
-                <!-- حقل إدخال سعة الخزان -->
-                <div>
-                    <label for="tank-capacity-input" class="block text-sm font-medium text-gray-400 mb-1">سعة خزان Molino (كغم):</label>
-                    <input type="number" id="tank-capacity-input" placeholder="أدخل السعة" 
-                           class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:ring-primary-light focus:border-primary-light">
+            <div class="performance-bar-container">
+                <div class="perf-title">
+                    <span>مقارنة بمتوسط الأداء التاريخي</span>
+                    <span id="compText">0%</span>
                 </div>
-                <!-- حقل إدخال لون الحالة (مثال للتحكم) -->
-                <div>
-                    <label for="status-color-input" class="block text-sm font-medium text-gray-400 mb-1">لون حالة التشغيل (بالكود Hex):</label>
-                    <input type="text" id="status-color-input" placeholder="#10b981" 
-                           class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:ring-primary-light focus:border-primary-light">
+                <div class="perf-progress-bg">
+                    <div id="compBar" class="perf-progress-fill"></div>
                 </div>
-                
-                <button id="save-settings-btn" 
-                        class="main-button bg-primary-light hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg w-full disabled:opacity-50">
-                    حفظ الإعدادات
-                </button>
+                <small id="compMessage" style="display:block; margin-top:5px; font-size:0.75rem; color:#666;"></small>
+            </div>
+
+            <h4 style="margin: 10px 0 5px 0; font-size: 0.9rem; color: #0277bd;">📋 التوصيات والملاحظات:</h4>
+            <ul class="ai-insights" id="aiInsightsList">
+                <li>يرجى إدخال بيانات لبدء التحليل...</li>
+            </ul>
+        </div>
+    </div>
+    
+    <hr>
+    
+    <button class="secondary-btn" onclick="showChartsModal()">📊 عرض الرسوم البيانية التفاعلية</button>
+    
+    <hr>
+
+    <h2>📑 السجل الحالي</h2>
+    <table id="recordsTable">
+        <thead>
+            <tr><th>الوقت</th><th>الخزان</th><th>الوزن</th><th>الفرق</th><th>حذف</th></tr>
+        </thead>
+        <tbody id="recordsBody"></tbody>
+    </table>
+
+    <hr>
+
+    <div style="display: flex; gap: 10px;">
+        <button class="danger-btn" onclick="endWork()" style="flex: 1;">🔴 إنهاء وحفظ للأرشيف</button>
+        <button class="secondary-btn" onclick="viewHistory()" style="flex: 1;">📂 الأرشيف والمقارنة</button>
+    </div>
+
+    <div class="backup-section">
+        <h3 style="margin-top: 0; font-size: 1rem;">💾 أدوات النظام</h3>
+        <p style="font-size:0.8em; color:#666;">البيانات محفوظة تلقائياً في السحابة (Firebase Cloud).</p>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="secondary-btn small-btn" onclick="exportData()">⬇️ تحميل Backup محلي</button>
+            <input type="file" id="importFile" accept=".json" style="padding: 5px;" onchange="importData(this)">
+        </div>
+    </div>
+</div>
+
+<!-- النوافذ المنبثقة (Modals) -->
+
+<div id="chartsModal" class="charts-modal">
+    <div class="charts-content">
+        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            <span>📈 الرسوم البيانية التفاعلية</span>
+            <button class="danger-btn small-btn" onclick="hideChartsModal()" style="margin: 0; width: auto;">إغلاق ✖️</button>
+        </h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="secondary-btn small-btn" onclick="renderAllCharts()">🔄 تحديث الرسوم البيانية</button>
+        </div>
+
+        <div class="chart-container" style="height: 350px;">
+            <h4>الأوزان التراكمية الحالية (T) - كل خزان</h4>
+            <canvas id="currentWeightsChart"></canvas>
+        </div>
+
+        <div class="chart-container" style="height: 350px;">
+            <h4>فروقات الأوزان (طن) - الجلسة الحالية</h4>
+            <canvas id="currentDifferencesChart"></canvas>
+        </div>
+        
+        <div class="chart-container" style="height: 350px;">
+            <h4>إجمالي الإنتاج اليومي (T) - الأرشيف</h4>
+            <canvas id="historyTotalChart"></canvas>
+        </div>
+        
+        <div class="chart-container" style="height: 350px;">
+            <h4>متوسط سرعة الإنتاج (T/h) - الأرشيف</h4>
+            <canvas id="historySpeedChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="settingsModal" class="settings-modal">
+    <div class="settings-content">
+        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            <span>⚙️ إعدادات المصنع المتقدمة (Firebase)</span>
+            <button class="danger-btn small-btn" onclick="hideSettingsModal()" style="margin: 0; width: auto;">إغلاق ✖️</button>
+        </h2>
+        
+        <div id="admin-access-warning" style="display:none; background:#ffebee; color:#c62828; padding:10px; margin-bottom:15px; border-radius:5px;">
+            ⚠️ <strong>تنبيه:</strong> أنت لست المسؤول. لا يمكنك حفظ التعديلات على الإعدادات العامة.
+        </div>
+
+        <form id="settingsForm">
+            <h3>🎨 إعدادات التنسيق البصري</h3>
+            <label for="blinkSpeedInput">سرعة وميض التنبيه (ثانية):</label>
+            <div class="input-group">
+                <input type="number" id="blinkSpeedInput" min="0.1" max="2" step="0.1" required>
+                <span>ثانية</span>
             </div>
             
-            <p id="admin-message" class="text-sm text-gray-400 p-2 rounded-md bg-gray-800">
-                <span class="text-secondary-red">🚫 لا تملك صلاحيات المسؤول.</span>
-                <br>
-                سيتم إظهار لوحة التحكم للمسؤول فقط.
-            </p>
-        </section>
-
-        <!-- لوحة أرشيف العمليات (History) -->
-        <section class="card p-5">
-            <h2 class="text-xl font-bold mb-4 text-primary-light flex items-center space-x-2 space-x-reverse">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 000 2h8a1 1 0 000-2H6zm0 4a1 1 0 000 2h8a1 1 0 000-2H6zm0 4a1 1 0 000 2h5a1 1 0 000-2H6z" clip-rule="evenodd" />
-                </svg>
-                أرشيف العمليات
-            </h2>
-            <div id="history-list" class="space-y-3">
-                <p id="history-loading" class="text-gray-500 loading-pulse">جاري تحميل الأرشيف...</p>
-                <!-- سيتم عرض سجلات الأرشيف هنا -->
-            </div>
-        </section>
-        
-        <!-- رسالة الخطأ العامة (لا تستخدم alert) -->
-        <div id="message-box" class="fixed bottom-4 right-4 bg-secondary-red text-white p-3 rounded-lg shadow-xl hidden z-50 transition-opacity duration-300"></div>
-
-    </main>
-
-    <script type="module">
-        // ----------------------------------------------------
-        // I. إعداد وتكوين Firebase
-        // ----------------------------------------------------
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc, 
-            addDoc, 
-            collection, 
-            onSnapshot, 
-            serverTimestamp,
-            getDocs,
-            query,
-            limit
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // تفعيل سجلات Firebase (للتصحيح)
-        setLogLevel('Debug');
-
-        // متغيرات Firebase العالمية (مقدمة من بيئة العمل)
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-molino-app-id';
-        
-        // معلومات المسؤول (يجب أن تتطابق مع قواعد الأمان)
-        const ADMIN_EMAIL = 'koreanarabione@gmail.com'; // ✅ تم تحديث هذا البريد
-        
-        let app, db, auth, userId = null;
-        let isUserAdmin = false;
-        let unsubscribeSession = null;
-        let unsubscribeHistory = null;
-        let settings = {};
-
-        // ----------------------------------------------------
-        // II. العناصر في الواجهة الرسومية (DOM Elements)
-        // ----------------------------------------------------
-        const userIdSpan = document.getElementById('user-id');
-        const sessionStatus = document.getElementById('session-status');
-        const startTimeEl = document.getElementById('start-time');
-        const currentProductionEl = document.getElementById('current-production');
-        const startBtn = document.getElementById('start-session-btn');
-        const stopBtn = document.getElementById('stop-session-btn');
-        const adminPanel = document.getElementById('admin-panel');
-        const adminMessage = document.getElementById('admin-message');
-        const saveSettingsBtn = document.getElementById('save-settings-btn');
-        const tankCapacityInput = document.getElementById('tank-capacity-input');
-        const statusColorInput = document.getElementById('status-color-input');
-        const historyList = document.getElementById('history-list');
-        const messageBox = document.getElementById('message-box');
-
-
-        // ----------------------------------------------------
-        // III. الوظائف المساعدة
-        // ----------------------------------------------------
-
-        /** * @description Displays a temporary message box instead of alert().
-         * @param {string} message The message to display.
-         * @param {string} type 'success' or 'error'.
-         */
-        function showMessage(message, type) {
-            messageBox.textContent = message;
-            messageBox.classList.remove('hidden', 'bg-secondary-green', 'bg-secondary-red');
-            if (type === 'success') {
-                messageBox.classList.add('bg-secondary-green');
-            } else {
-                messageBox.classList.add('bg-secondary-red');
-            }
-            // إظهار الرسالة ثم إخفاؤها بعد 3 ثواني
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 3000);
-        }
-
-        /**
-         * @description Generates the Firestore path for the user's private data.
-         * @param {string} collectionName The collection name (e.g., 'sessions', 'history').
-         * @returns {string} The full path.
-         */
-        function getPrivatePath(collectionName) {
-            return `artifacts/${appId}/users/${userId}/${collectionName}`;
-        }
-        
-        /**
-         * @description Generates the Firestore path for the public data (Settings).
-         * @param {string} docName The document name (e.g., 'config').
-         * @returns {string} The full path.
-         */
-        function getPublicPath(docName) {
-            // ملاحظة: المسار هنا هو /artifacts/{appId}/public/data/settings/config
-            return `artifacts/${appId}/public/data/settings/${docName}`;
-        }
-
-        /**
-         * @description Formats a Firestore Timestamp object into a readable string.
-         * @param {object} timestamp The Firestore Timestamp object.
-         * @returns {string} The formatted date/time string.
-         */
-        function formatTimestamp(timestamp) {
-            if (!timestamp) return 'غير محدد';
-            // تحويل timestamp إلى كائن Date
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'medium' });
-        }
-        
-        // ----------------------------------------------------
-        // IV. وظائف التعامل مع البيانات (Data Handlers)
-        // ----------------------------------------------------
-
-        /**
-         * @description Starts a new Molino session.
-         */
-        async function startSession() {
-            if (!userId) {
-                showMessage('خطأ: لم يتم تسجيل الدخول بعد.', 'error');
-                return;
-            }
+            <label for="highWeightColorInput">لون التعبئة العالية (90% من السعة):</label>
+            <input type="color" id="highWeightColorInput" required>
             
-            try {
-                // مرجع المستند للجلسة الحالية للمستخدم
-                // المسار: artifacts/{appId}/users/{userId}/sessions/current
-                const sessionDocRef = doc(db, getPrivatePath('sessions'), 'current');
-                
-                await setDoc(sessionDocRef, {
-                    // استخدام serverTimestamp لضمان دقة وقت الخادم
-                    startTime: serverTimestamp(),
-                    isRunning: true,
-                    productionKg: 0,
-                    // يمكن إضافة المزيد من البيانات هنا
-                }, { merge: true }); // استخدام merge للحفاظ على أي بيانات قديمة إذا وجدت
+            <label for="extensionColorInput">لون وضع التمديد (فوق السعة المقدرة):</label>
+            <input type="color" id="extensionColorInput" required>
 
-                showMessage('تم بدء جلسة Molino بنجاح!', 'success');
-            } catch (error) {
-                console.error("Error starting session:", error);
-                showMessage(`خطأ في بدء الجلسة: ${error.message}`, 'error');
-            }
+            <h3 style="margin-top: 30px;">🛢️ إدارة الخزانات والسعات</h3>
+            <div id="siloSettingsContainer"></div>
+            <button type="button" class="secondary-btn small-btn" onclick="addSiloSetting()" style="width: auto;">➕ إضافة خزان جديد</button>
+            <hr>
+            
+            <button type="submit" id="saveSettingsBtn" style="margin-top: 20px;">💾 حفظ الإعدادات (Cloud)</button>
+            <p id="settingsMessage" style="color: green; font-weight: bold; display: none; margin-top: 10px;"></p>
+            
+            <hr style="margin-top: 20px;">
+            <h3 style="color: #dc3545;">⚠️ المنطقة الخطرة</h3>
+            <p style="font-size: 0.85rem; color: #6c757d;">حذف جميع بياناتك من السحابة بشكل نهائي.</p>
+            <button type="button" class="reset-btn" onclick="factoryReset()">🔥 حذف بياناتي وإعادة ضبط المصنع</button>
+        </form>
+    </div>
+</div>
+
+<div id="historyPage" class="container" style="display:none;">
+    <h2>📂 الأرشيف التاريخي</h2>
+    <div style="background:#e8f5e9; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #c8e6c9;">
+        <strong>🏆 القاعة الشرفية:</strong> أفضل إنتاج مسجل كان بتاريخ <span id="bestDateDisplay"></span> بكمية <strong id="bestAmountDisplay"></strong> طن.
+    </div>
+    <table id="historyTable">
+        <thead><tr><th>التاريخ</th><th>الإجمالي (T)</th><th>السرعة (T/h)</th><th>خيارات</th></tr></thead> 
+        <tbody id="historyBody"></tbody>
+    </table>
+    <button style="margin-top: 20px;" onclick="hideHistory()" class="secondary-btn">🔙 عودة</button>
+</div>
+
+<div id="sessionDetailsModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div style="background-color: #fefefe; margin: 5% auto; padding: 25px; width: 90%; max-width: 500px; border-radius: 12px;">
+        <h3 style="margin-top:0;">تفاصيل الجلسة</h3>
+        <div id="modalAiSummary" class="ai-summary-box"></div> 
+        
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table id="modalRecordsTable">
+                <thead>
+                    <tr><th>الوقت</th><th>الخزان</th><th>الوزن</th><th>الفرق</th></tr> 
+                </thead>
+                <tbody id="modalRecordsBody"></tbody>
+            </table>
+        </div>
+        <button onclick="document.getElementById('sessionDetailsModal').style.display='none'" class="danger-btn small-btn" style="float: right; margin-top: 15px;">إغلاق</button>
+        <div style="clear: both;"></div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // ☁️ إعدادات Firebase
+    // ==========================================
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyCXeIS89Cd0DKz7BTsIfQDr3Ckb544dR8k",
+        authDomain: "siloun.firebaseapp.com",
+        databaseURL: "https://siloun-default-rtdb.firebaseio.com",
+        projectId: "siloun",
+        storageBucket: "siloun.firebasestorage.app",
+        messagingSenderId: "111587591132",
+        appId: "1:111587591132:web:0b7e481138e8885076c519"
+    };
+
+    // تهيئة Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // ==========================================
+    // ⚙️ المتغيرات والثوابت
+    // ==========================================
+    
+    // 🛑 تأكد أن هذا يطابق البريد الموجود في قواعد الأمان
+    const ADMIN_EMAIL = 'koreanarabione@gmail.com'; 
+    const DB_ROOT_PATH = 'molino_app_data/';
+    const SETTINGS_PATH = 'settings'; 
+
+    let currentUserId = null;
+    let currentUserEmail = null;
+    let AppSettings = {}; 
+    let currentSessionRecords = []; 
+    let lastKnownWeights = {}; 
+    let currentAiAnalysis = {}; 
+    let authMode = 'login'; 
+    
+    let currentWeightsChart = null;
+    let currentDifferencesChart = null;
+    let historyTotalChart = null;
+    let historySpeedChart = null;
+    
+    const DEFAULT_CHART_COLORS = {
+        'Good': 'rgba(40, 167, 69, 1)', 
+        'Bad': 'rgba(220, 53, 69, 1)', 
+    };
+
+    const DEFAULT_SETTINGS = {
+        BLINK_SPEED: 1.0, 
+        HIGH_WEIGHT_COLOR: '#ffc107', 
+        EXTENSION_COLOR: '#dc3545',   
+        NORMAL_COLOR: '#28a745',      
+        SILOS: [
+            { id: 1, name: 'Siloun 1', ratedCapacity: 63.0, maxExtension: 75.0 },
+            { id: 2, name: 'Siloun 2', ratedCapacity: 63.0, maxExtension: 75.0 },
+            { id: 3, name: 'Siloun 3', ratedCapacity: 63.0, maxExtension: 75.0 },
+            { id: 4, name: 'Siloun 4', ratedCapacity: 63.0, maxExtension: 75.0 }
+        ],
+    };
+
+    // ==========================================
+    // 🔐 إدارة المصادقة (Auth Management)
+    // ==========================================
+
+    auth.onAuthStateChanged((user) => {
+        hideAllPages();
+        if (user) {
+            currentUserId = user.uid;
+            currentUserEmail = user.email;
+            
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('loggedInUser').textContent = user.email;
+            
+            // تحميل البيانات عند تسجيل الدخول
+            loadInitialData(); 
+        } else {
+            currentUserId = null;
+            currentUserEmail = null;
+            document.getElementById('auth-page').style.display = 'flex';
         }
+    });
 
-        /**
-         * @description Stops the current session and archives the data.
-         */
-        async function stopSession() {
-            if (!userId) return;
+    function toggleAuthMode() {
+        const title = document.getElementById('auth-title');
+        const button = document.getElementById('authButton');
+        const link = document.getElementById('toggleAuth');
+        const message = document.getElementById('authMessage');
 
-            // 1. قراءة بيانات الجلسة الحالية
-            const sessionDocRef = doc(db, getPrivatePath('sessions'), 'current');
-            const sessionSnap = await getDoc(sessionDocRef);
-            
-            if (!sessionSnap.exists() || !sessionSnap.data().isRunning) {
-                showMessage('لا توجد جلسة نشطة لإنهاءها.', 'error');
-                return;
-            }
+        if (authMode === 'login') {
+            authMode = 'register';
+            title.textContent = 'إنشاء حساب جديد ✨';
+            button.textContent = 'تسجيل';
+            link.textContent = 'لدي حساب بالفعل (تسجيل دخول)';
+        } else {
+            authMode = 'login';
+            title.textContent = 'تسجيل الدخول 👋';
+            button.textContent = 'دخول';
+            link.textContent = 'إنشاء حساب جديد';
+        }
+        message.style.display = 'none';
+    }
 
-            const sessionData = sessionSnap.data();
-            
-            try {
-                // 2. إضافة إلى الأرشيف (History)
-                // المسار: artifacts/{appId}/users/{userId}/history
-                const historyCollectionRef = collection(db, getPrivatePath('history'));
-                await addDoc(historyCollectionRef, {
-                    ...sessionData,
-                    endTime: serverTimestamp(),
-                    durationMinutes: calculateDuration(sessionData.startTime), // وظيفة حساب المدة
-                    // إضافة بيانات إضافية مثل إجمالي الكمية
+    document.getElementById('authForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value.trim();
+        const message = document.getElementById('authMessage');
+
+        message.style.display = 'none';
+
+        if (authMode === 'register') {
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => {
+                    message.textContent = '✅ تم التسجيل بنجاح. جاري الدخول...';
+                    message.style.backgroundColor = '#d4edda';
+                    message.style.color = '#155724';
+                    message.style.display = 'block';
+                })
+                .catch(error => {
+                    message.textContent = `❌ خطأ: ${error.message}`;
+                    message.style.backgroundColor = '#f8d7da';
+                    message.style.color = '#721c24';
+                    message.style.display = 'block';
                 });
-
-                // 3. حذف الجلسة الحالية أو إعادة تعيينها
-                await setDoc(sessionDocRef, {
-                    isRunning: false,
-                    productionKg: 0,
-                    startTime: null
-                }, { merge: true });
-                
-                showMessage('تم إنهاء الجلسة وحفظها في الأرشيف!', 'success');
-            } catch (error) {
-                console.error("Error stopping and archiving session:", error);
-                showMessage(`خطأ في إنهاء الجلسة: ${error.message}`, 'error');
-            }
-        }
-        
-        /**
-         * @description A simple function to simulate production increase (for demo).
-         * NOTE: In a real app, this data would come from an external IoT device writing to Firebase.
-         */
-        async function simulateProductionIncrease() {
-            if (!userId) return;
-            
-            try {
-                const sessionDocRef = doc(db, getPrivatePath('sessions'), 'current');
-                const sessionSnap = await getDoc(sessionDocRef);
-                
-                if (sessionSnap.exists() && sessionSnap.data().isRunning) {
-                    const currentData = sessionSnap.data();
-                    
-                    // زيادة افتراضية (مثلاً 50 كغم كل 5 ثواني)
-                    const newProduction = (currentData.productionKg || 0) + 50; 
-                    
-                    await setDoc(sessionDocRef, {
-                        productionKg: newProduction
-                    }, { merge: true });
-                }
-            } catch (error) {
-                // لا تسجل الأخطاء هنا لتجنب التشويش في كل تكرار
-            }
-        }
-        
-        /**
-         * @description Saves factory settings (Admin only).
-         */
-        async function saveSettings() {
-            if (!isUserAdmin) {
-                showMessage('لا تملك صلاحية لحفظ الإعدادات.', 'error');
-                return;
-            }
-            
-            const capacity = parseInt(tankCapacityInput.value, 10);
-            const color = statusColorInput.value.trim();
-
-            if (isNaN(capacity) || capacity <= 0) {
-                showMessage('يرجى إدخال سعة خزان صحيحة.', 'error');
-                return;
-            }
-            
-            try {
-                // المسار: artifacts/{appId}/public/data/settings/config
-                const settingsDocRef = doc(db, getPublicPath('config'));
-                await setDoc(settingsDocRef, {
-                    tankCapacity: capacity,
-                    statusColor: color,
-                    lastUpdated: serverTimestamp()
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    message.textContent = `❌ خطأ: ${error.message}`;
+                    message.style.backgroundColor = '#f8d7da';
+                    message.style.color = '#721c24';
+                    message.style.display = 'block';
                 });
-                showMessage('تم حفظ إعدادات المصنع بنجاح!', 'success');
-            } catch (error) {
-                console.error("Error saving settings:", error);
-                showMessage(`خطأ في حفظ الإعدادات: ${error.message}`, 'error');
-            }
         }
-        
-        /**
-         * @description Calculates duration in minutes from Firestore Timestamp.
-         */
-        function calculateDuration(startTime) {
-            if (!startTime) return 0;
-            const startMs = startTime.toDate ? startTime.toDate().getTime() : new Date(startTime).getTime();
-            const nowMs = new Date().getTime();
-            return Math.floor((nowMs - startMs) / 60000); // بالدقائق
+    });
+
+    function logout() {
+        if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+            auth.signOut();
         }
+    }
+
+    // ==========================================
+    // ☁️ وظائف البيانات (Firebase Database)
+    // ==========================================
+
+    async function loadInitialData() {
+        await loadSettings(); // تحميل الإعدادات أولاً
+        await loadUserSessionData(); // ثم بيانات الجلسة
         
-        // ----------------------------------------------------
-        // V. وظائف الاستماع للبيانات الفورية (Realtime Listeners)
-        // ----------------------------------------------------
+        updateDateTime();
+        updateAllGauges();
+        renderRecords();
+        performSmartAIAnalysis();
+    }
 
-        /**
-         * @description Sets up the listener for the user's current session data.
-         */
-        function setupSessionListener() {
-            if (unsubscribeSession) unsubscribeSession();
-            
-            const sessionDocRef = doc(db, getPrivatePath('sessions'), 'current');
-
-            unsubscribeSession = onSnapshot(sessionDocRef, (docSnap) => {
-                const data = docSnap.data();
-                if (docSnap.exists() && data && data.isRunning) {
-                    // تحديث الحالة إلى "قيد التشغيل"
-                    sessionStatus.textContent = 'قيد التشغيل';
-                    sessionStatus.classList.remove('text-secondary-red');
-                    
-                    // استخدام لون الحالة من الإعدادات العامة أو اللون الافتراضي
-                    const statusColor = settings.statusColor || 'text-secondary-green';
-                    sessionStatus.style.color = statusColor;
-                    
-                    // تحديث وقت البدء
-                    startTimeEl.textContent = formatTimestamp(data.startTime);
-                    
-                    // تحديث كمية الإنتاج
-                    const production = (data.productionKg || 0).toLocaleString();
-                    currentProductionEl.textContent = `${production} كغم`;
-                    currentProductionEl.classList.remove('loading-pulse');
-
-                    // تفعيل/تعطيل الأزرار
-                    startBtn.disabled = true;
-                    stopBtn.disabled = false;
-                } else {
-                    // تحديث الحالة إلى "متوقفة"
-                    sessionStatus.textContent = 'متوقفة';
-                    sessionStatus.classList.remove('text-secondary-green');
-                    sessionStatus.style.color = ''; // إزالة اللون المخصص
-                    sessionStatus.classList.add('text-secondary-red');
-                    
-                    // تحديث البيانات
-                    startTimeEl.textContent = 'غير محدد';
-                    currentProductionEl.textContent = '0 كغم';
-                    currentProductionEl.classList.remove('loading-pulse');
-
-                    // تفعيل/تعطيل الأزرار
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                }
-            }, (error) => {
-                console.error("Error listening to session data:", error);
-                showMessage('خطأ في الاتصال الفوري بالبيانات.', 'error');
-            });
-        }
-        
-        /**
-         * @description Sets up the listener for the factory settings (public data).
-         */
-        function setupSettingsListener() {
-             const settingsDocRef = doc(db, getPublicPath('config'));
-             
-             // الاستماع للتحديثات الفورية للإعدادات
-             onSnapshot(settingsDocRef, (docSnap) => {
-                 if (docSnap.exists()) {
-                     settings = docSnap.data();
-                     
-                     // تحديث واجهة المسؤول عند تحميل الإعدادات
-                     tankCapacityInput.value = settings.tankCapacity || '';
-                     statusColorInput.value = settings.statusColor || '';
-                     
-                     // تحديث لون الحالة مباشرة في الجلسة إذا كانت تعمل
-                     const currentStatusColor = settings.statusColor || '';
-                     if (sessionStatus.textContent === 'قيد التشغيل') {
-                         sessionStatus.style.color = currentStatusColor;
-                     }
-                     
-                 } else if (isUserAdmin) {
-                     // إذا لم يكن هناك إعدادات، قم بإنشاء إعدادات افتراضية إذا كنت مسؤولاً
-                      setDoc(settingsDocRef, {
-                          tankCapacity: 1000,
-                          statusColor: '#10b981',
-                          lastUpdated: serverTimestamp()
-                      }, { merge: true });
-                 }
-             }, (error) => {
-                 console.error("Error listening to settings data:", error);
-             });
-        }
-
-        /**
-         * @description Sets up the listener for the user's history data.
-         */
-        function setupHistoryListener() {
-            if (unsubscribeHistory) unsubscribeHistory();
-
-            const historyCollectionRef = collection(db, getPrivatePath('history'));
-            // استعلام: جلب آخر 10 عمليات، باستخدام limit
-            // ملاحظة: لا نستخدم orderBy لتجنب أخطاء الفهرسة (Indexes)
-            const q = query(historyCollectionRef, limit(10)); 
-
-            unsubscribeHistory = onSnapshot(q, (snapshot) => {
-                historyList.innerHTML = ''; // مسح القائمة الحالية
-                
-                if (snapshot.empty) {
-                    historyList.innerHTML = '<p id="history-loading" class="text-gray-500">لا يوجد سجل عمليات بعد.</p>';
-                    return;
-                }
-                
-                // فرز البيانات في الذاكرة لضمان الترتيب التنازلي حسب وقت الانتهاء
-                const sortedHistory = snapshot.docs
-                    .map(doc => doc.data())
-                    .sort((a, b) => (b.endTime?.seconds || 0) - (a.endTime?.seconds || 0));
-
-                sortedHistory.forEach(data => {
-                    const duration = data.startTime ? calculateDuration(data.startTime) : 'غير محدد';
-                    
-                    const item = document.createElement('div');
-                    item.className = 'card p-4 border-r-4 border-primary-light';
-                    item.innerHTML = `
-                        <p class="text-lg font-semibold text-primary-light">عملية مكتملة</p>
-                        <p class="text-sm text-gray-400">بدأت: ${formatTimestamp(data.startTime)}</p>
-                        <p class="text-sm text-gray-400">انتهت: ${formatTimestamp(data.endTime || 'لم تكتمل')}</p>
-                        <div class="mt-2 flex justify-between items-center">
-                             <span class="text-xl font-bold text-secondary-green">${(data.productionKg || 0).toLocaleString()} كغم</span>
-                             <span class="text-sm text-gray-500">${duration} دقيقة</span>
-                        </div>
-                    `;
-                    historyList.appendChild(item);
-                });
-            }, (error) => {
-                console.error("Error listening to history data:", error);
-                historyList.innerHTML = '<p class="text-secondary-red">خطأ في تحميل الأرشيف.</p>';
-            });
-        }
-        
-        // ----------------------------------------------------
-        // VI. بدء التشغيل (Initialization)
-        // ----------------------------------------------------
-        
-        /**
-         * @description Main function to initialize Firebase and listeners.
-         */
-        async function initializeAppAndAuth() {
-            try {
-                // 1. تهيئة التطبيق وقاعدة البيانات
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // 2. المصادقة باستخدام الرمز المخصص أو كمستخدم مجهول
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // 3. الاستماع لتغيرات حالة المصادقة
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userIdSpan.textContent = userId;
-                        userIdSpan.classList.remove('loading-pulse');
-                        
-                        // التحقق من صلاحيات المسؤول
-                        isUserAdmin = (user.email === ADMIN_EMAIL);
-                        if (isUserAdmin) {
-                            adminPanel.style.display = 'block';
-                            adminMessage.style.display = 'none';
-                        } else {
-                            adminPanel.style.display = 'none';
-                            adminMessage.style.display = 'block';
-                        }
-                        
-                        // بدء الاستماع للبيانات الفورية بعد التأكد من وجود المستخدم
-                        setupSettingsListener(); // يجب أن يكون الأول لقراءة الإعدادات
-                        setupSessionListener();
-                        setupHistoryListener();
-                        
-                        // بدء محاكاة تحديث البيانات (للتجربة)
-                        setInterval(simulateProductionIncrease, 5000); 
-
-                    } else {
-                        userIdSpan.textContent = 'غير مصادق';
-                        userIdSpan.classList.remove('loading-pulse');
-                        // في حال عدم المصادقة، يفضل عدم تشغيل أي مستمعين للبيانات الخاصة
+    function loadSettings() {
+        // قراءة الإعدادات العامة
+        return database.ref(DB_ROOT_PATH + SETTINGS_PATH).once('value')
+            .then(snapshot => {
+                const val = snapshot.val();
+                if (val) {
+                    AppSettings = { ...DEFAULT_SETTINGS, ...val };
+                    // تصحيح المصفوفات إذا جاءت ككائنات
+                    if (val.SILOS && !Array.isArray(val.SILOS)) {
+                        AppSettings.SILOS = Object.values(val.SILOS);
                     }
-                });
+                } else {
+                    AppSettings = DEFAULT_SETTINGS;
+                }
                 
-            } catch (error) {
-                console.error("Firebase Initialization or Auth Error:", error);
-                userIdSpan.textContent = 'خطأ في النظام';
-                showMessage(`خطأ فادح في تهيئة النظام: ${error.message}`, 'error');
+                // التأكد من أن كل خزان لديه ID
+                AppSettings.SILOS = AppSettings.SILOS.map((s, i) => ({ ...s, id: s.id || (i + 1) }));
+                applySettingsToUI();
+            });
+    }
+
+    function saveSettings() {
+        // التحقق من صلاحية المسؤول
+        if (currentUserEmail !== ADMIN_EMAIL) {
+            return Promise.reject(new Error("غير مصرح لك بتعديل الإعدادات العامة."));
+        }
+
+        const settingsToSave = JSON.parse(JSON.stringify(AppSettings));
+        delete settingsToSave.NORMAL_COLOR; // لا نحفظ الثابت
+        
+        return database.ref(DB_ROOT_PATH + SETTINGS_PATH).set(settingsToSave);
+    }
+
+    function loadUserSessionData() {
+        if (!currentUserId) return Promise.resolve();
+        
+        return database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).once('value')
+            .then(snapshot => {
+                const stored = snapshot.val();
+                currentSessionRecords = stored ? Object.values(stored) : [];
+                
+                // حساب آخر وزن معروف لكل خزان
+                lastKnownWeights = {}; 
+                AppSettings.SILOS.forEach(silo => {
+                    const recs = currentSessionRecords
+                        .filter(r => r.siloun === silo.name)
+                        .sort((a,b) => a.id - b.id); 
+                    lastKnownWeights[silo.name] = recs.length ? parseFloat(recs[recs.length-1].weight) : 0;
+                });
+            });
+    }
+
+    function saveUserSessionData() {
+        if (!currentUserId) return Promise.resolve();
+        
+        // تحويل المصفوفة إلى كائن باستخدام ID كمفتاح
+        const sessionObject = currentSessionRecords.reduce((obj, rec) => {
+            obj[rec.id] = rec;
+            return obj;
+        }, {});
+        
+        return database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).set(sessionObject);
+    }
+    
+    function loadUserHistory() {
+        if (!currentUserId) return Promise.resolve([]);
+        return database.ref(DB_ROOT_PATH + 'history/' + currentUserId).once('value')
+            .then(snapshot => {
+                 const stored = snapshot.val();
+                 return stored ? Object.values(stored) : [];
+            });
+    }
+
+    function saveUserHistory(historyData) {
+        if (!currentUserId) return Promise.resolve();
+        
+        const historyObject = historyData.reduce((obj, rec) => {
+            obj[new Date(rec.date).getTime()] = rec; 
+            return obj;
+        }, {});
+
+        return database.ref(DB_ROOT_PATH + 'history/' + currentUserId).set(historyObject);
+    }
+
+    // ==========================================
+    // 🖥️ واجهة المستخدم والمنطق
+    // ==========================================
+
+    function hideAllPages() {
+        document.getElementById('auth-page').style.display = 'none';
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('historyPage').style.display = 'none';
+        document.getElementById('sessionDetailsModal').style.display = 'none';
+        document.getElementById('chartsModal').style.display = 'none';
+        document.getElementById('settingsModal').style.display = 'none'; 
+    }
+
+    function applySettingsToUI() {
+        document.documentElement.style.setProperty('--blink-speed', `${AppSettings.BLINK_SPEED}s`);
+        
+        const maxOverallExtension = AppSettings.SILOS.reduce((max, s) => Math.max(max, s.maxExtension), 0);
+        const maxWeightDisplay = document.getElementById('maxWeightDisplay');
+        if (maxWeightDisplay) {
+            maxWeightDisplay.textContent = `Max ${maxOverallExtension.toFixed(1)}T`;
+        }
+        
+        updateSiloDropdown();
+        setupGauges();
+        updateAllGauges();
+    }
+    
+    function updateSiloDropdown() {
+        const select = document.getElementById('silounSelect');
+        if (select) {
+            select.innerHTML = AppSettings.SILOS.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            
+            select.onchange = () => {
+                const selectedSiloName = select.value;
+                const selectedSilo = AppSettings.SILOS.find(s => s.name === selectedSiloName);
+                if (selectedSilo) {
+                     document.getElementById('weightInput').max = selectedSilo.maxExtension;
+                     document.getElementById('maxWeightDisplay').textContent = `Max ${selectedSilo.maxExtension.toFixed(1)}T`;
+                }
+            };
+            if(AppSettings.SILOS.length > 0) {
+                 // Trigger change to set initial max values
+                 select.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    function setupGauges() {
+        document.getElementById('gauges').innerHTML = AppSettings.SILOS.map(silo => {
+            const RATED_CAPACITY = silo.ratedCapacity;
+            const MAX_EXTENSION = silo.maxExtension;
+            const siloName = silo.name;
+            const id = siloName.replace(/\s/g,''); // إزالة المسافات للـ ID
+            
+            return `
+                <div class="gauge-container">
+                    <div class="gauge-labels">
+                        <strong>${siloName}</strong>
+                        <strong style="font-family:sans-serif;"><span id="w-${id}">0.00</span> T</strong>
+                    </div>
+                    <div class="gauge-wrapper">
+                        <div class="gauge-main"><div id="bar-m-${id}" class="fill-bar" style="background:${AppSettings.NORMAL_COLOR};"></div></div>
+                        <div class="gauge-extension"><div id="bar-e-${id}" class="fill-bar" style="background:${AppSettings.EXTENSION_COLOR};"></div></div>
+                    </div>
+                    <div class="gauge-sub-labels"><span>0</span><span style="margin-right:-15%">${RATED_CAPACITY.toFixed(1)}</span><span>${MAX_EXTENSION.toFixed(1)}</span></div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateGauge(siloName, weight) {
+        const siloSettings = AppSettings.SILOS.find(s => s.name === siloName);
+        if (!siloSettings) return;
+
+        const RATED_CAPACITY = siloSettings.ratedCapacity;
+        const MAX_EXTENSION = siloSettings.maxExtension;
+        const id = siloName.replace(/\s/g,'');
+        const w = parseFloat(weight); 
+
+        const wDisplay = document.getElementById(`w-${id}`);
+        const mBar = document.getElementById(`bar-m-${id}`);
+        const eBar = document.getElementById(`bar-e-${id}`);
+        
+        if (!wDisplay || !mBar || !eBar) return; 
+
+        wDisplay.textContent = w.toFixed(2);
+
+        if (w <= RATED_CAPACITY) {
+            mBar.style.width = `${(w/RATED_CAPACITY)*100}%`;
+            eBar.style.width = '0%';
+            mBar.style.backgroundColor = w >= (RATED_CAPACITY * 0.9) ? AppSettings.HIGH_WEIGHT_COLOR : AppSettings.NORMAL_COLOR;
+            eBar.textContent = "";
+            eBar.classList.remove('blinking');
+        } else {
+            mBar.style.width = '100%';
+            mBar.style.backgroundColor = AppSettings.HIGH_WEIGHT_COLOR; 
+            
+            const extensionRange = MAX_EXTENSION - RATED_CAPACITY;
+            const extendedWeight = w - RATED_CAPACITY;
+            const extP = (extendedWeight / extensionRange) * 100;
+            
+            eBar.style.width = `${Math.min(extP, 100)}%`;
+            eBar.textContent = "EXT";
+            eBar.style.backgroundColor = AppSettings.EXTENSION_COLOR;
+            
+            if (w >= MAX_EXTENSION) eBar.classList.add('blinking');
+            else eBar.classList.remove('blinking');
+        }
+    }
+
+    function updateAllGauges() { 
+        AppSettings.SILOS.map(s => s.name).forEach(s => updateGauge(s, lastKnownWeights[s]||0)); 
+    }
+
+    // --- معالجة إدخال البيانات ---
+    document.getElementById('entryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const s = document.getElementById('silounSelect').value;
+        const w = parseFloat(document.getElementById('weightInput').value);
+        const dt = document.getElementById('dateTimeInput').value;
+        const newTime = new Date(dt).getTime();
+        
+        const siloSettings = AppSettings.SILOS.find(sl => sl.name === s);
+        if (w > siloSettings.maxExtension) return alert(`خطأ: الوزن يتجاوز ${siloSettings.maxExtension.toFixed(1)} طن لهذا الخزان!`);
+
+        // التحقق من الترتيب الزمني
+        if (currentSessionRecords.length > 0) {
+            const sortedRecords = [...currentSessionRecords].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+            const lastRecordedTime = new Date(sortedRecords[0].dateTime).getTime();
+            if (newTime < lastRecordedTime) {
+                alert(`خطأ زمني: لا يمكن إدخال قراءة سابقة لوقت آخر سجل.`);
+                return; 
+            }
+        }
+        
+        const prev = lastKnownWeights[s] || 0;
+        let diff = 'بداية';
+        // إذا كان هناك سجل سابق لنفس الخزان في الجلسة
+        if (currentSessionRecords.some(r => r.siloun === s) || prev > 0) {
+             diff = (w - prev).toFixed(2);
+        }
+
+        currentSessionRecords.push({ id: Date.now(), dateTime: dt, siloun: s, weight: w.toFixed(2), difference: diff });
+        lastKnownWeights[s] = w;
+        
+        await saveUserSessionData(); // حفظ في السحابة
+        
+        renderRecords();
+        updateGauge(s, w);
+        performSmartAIAnalysis(); 
+        
+        document.getElementById('weightInput').value = '';
+        updateDateTime();
+    });
+
+    function renderRecords() {
+        const tb = document.getElementById('recordsBody');
+        tb.innerHTML = '';
+        [...currentSessionRecords].reverse().forEach(r => {
+            const diffVal = parseFloat(r.difference);
+            const diffColor = diffVal > 0 ? 'green' : (diffVal < 0 ? 'red' : 'inherit');
+            tb.innerHTML += `<tr>
+                <td>${formatDateTimeEnglish(r.dateTime)}</td>
+                <td>${r.siloun}</td>
+                <td>${r.weight}</td>
+                <td style="color:${diffColor}">${r.difference}</td>
+                <td><button class="danger-btn small-btn" onclick="deleteRecord(${r.id})">❌</button></td>
+            </tr>`;
+        });
+    }
+
+    async function deleteRecord(id) {
+        if(!confirm('حذف السجل؟')) return;
+        
+        const idx = currentSessionRecords.findIndex(r=>r.id===id);
+        if(idx===-1) return;
+        const silo = currentSessionRecords[idx].siloun;
+        currentSessionRecords.splice(idx,1);
+        
+        // إعادة حساب الفروقات لهذا الخزان
+        let siloRecs = currentSessionRecords
+            .filter(r=>r.siloun===silo)
+            .sort((a,b)=>a.id - b.id); 
+
+        siloRecs.forEach((r,i) => {
+            if(i === 0) r.difference = 'بداية'; // أو يعتمد على آخر جلسة (غير مطبق هنا للبساطة)
+            else {
+                const prevWeight = parseFloat(siloRecs[i - 1].weight);
+                r.difference = (parseFloat(r.weight) - prevWeight).toFixed(2);
+            }
+        });
+        
+        lastKnownWeights[silo] = siloRecs.length ? parseFloat(siloRecs[siloRecs.length-1].weight) : 0;
+        
+        await saveUserSessionData();
+        renderRecords();
+        updateAllGauges();
+        performSmartAIAnalysis();
+    }
+
+    // --- الذكاء الاصطناعي والتحليل ---
+    function performSmartAIAnalysis() {
+        const insightsList = document.getElementById('aiInsightsList');
+        const aiSpeed = document.getElementById('aiSpeed');
+        const aiTotal = document.getElementById('aiTotal');
+        const aiBestDay = document.getElementById('aiBestDay');
+        const liveStatus = document.getElementById('liveStatus');
+        const compBar = document.getElementById('compBar');
+        const compText = document.getElementById('compText');
+        const compMessage = document.getElementById('compMessage');
+
+        if (currentSessionRecords.length === 0) {
+            aiSpeed.textContent = "0.0";
+            aiTotal.textContent = "0.00";
+            liveStatus.textContent = "بداية 💤";
+            liveStatus.style.background = "#999";
+            liveStatus.style.color = "white";
+            insightsList.innerHTML = '<li>يرجى إدخال بيانات لبدء التحليل...</li>';
+            compBar.style.width = '0%';
+            compText.textContent = '0%';
+            return;
+        }
+
+        insightsList.innerHTML = '';
+        let insights = [];
+        let totalCurrent = 0;
+        
+        currentSessionRecords.forEach(r => {
+            const v = parseFloat(r.difference);
+            if(v > 0) totalCurrent += v; 
+        });
+        aiTotal.textContent = totalCurrent.toFixed(2);
+
+        // تحميل الأرشيف للمقارنة
+        loadUserHistory().then(history => {
+            let maxHistTotal = 0;
+            let bestDateStr = 'لا يوجد';
+            let histTotals = [];
+            
+            history.forEach(h => {
+                const t = parseFloat(h.total);
+                histTotals.push(t);
+                if(t > maxHistTotal) {
+                    maxHistTotal = t;
+                    bestDateStr = formatDateOnly(h.date); 
+                }
+            });
+            aiBestDay.textContent = maxHistTotal > 0 ? `${maxHistTotal} (${bestDateStr})` : '-';
+            
+            // شريط التقدم
+            if (histTotals.length > 0) {
+                const avgHist = histTotals.reduce((a,b)=>a+b,0) / histTotals.length;
+                const ratio = (totalCurrent / (avgHist || 1)) * 100;
+                compBar.style.width = `${Math.min(ratio, 100)}%`;
+                compText.textContent = `${ratio.toFixed(0)}%`;
+                if(ratio > 100) { compBar.style.backgroundColor = '#28a745'; compMessage.textContent = 'ممتاز! أعلى من المعدل.'; }
+                else if(ratio > 50) { compBar.style.backgroundColor = '#17a2b8'; compMessage.textContent = 'أداء جيد.'; }
+                else { compBar.style.backgroundColor = '#ffc107'; compMessage.textContent = 'أقل من المعدل.'; }
+            }
+        });
+
+        // حساب السرعة والتوقعات
+        if (currentSessionRecords.length > 1) {
+            const sorted = [...currentSessionRecords].sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
+            const startTime = new Date(sorted[0].dateTime);
+            const endTime = new Date(sorted[sorted.length-1].dateTime);
+            const durationHrs = (endTime - startTime) / 3600000; 
+            
+            if (durationHrs > 0.1) { 
+                const speed = totalCurrent / durationHrs;
+                aiSpeed.textContent = speed.toFixed(1);
+                liveStatus.textContent = "يعمل ⚡";
+                liveStatus.style.background = "#4caf50";
+                liveStatus.style.color = "white";
+                
+                currentAiAnalysis.speed = speed.toFixed(1);
+                currentAiAnalysis.duration = durationHrs.toFixed(2);
+            }
+
+            // فحص آخر تسجيلين للتوقع
+            const lastRec = sorted[sorted.length-1];
+            const prevRec = sorted[sorted.length-2];
+            
+            if (lastRec.siloun === prevRec.siloun) {
+                const silo = AppSettings.SILOS.find(s => s.name === lastRec.siloun);
+                if (silo) {
+                    const timeDiff = (new Date(lastRec.dateTime) - new Date(prevRec.dateTime)) / 3600000;
+                    const wDiff = parseFloat(lastRec.weight) - parseFloat(prevRec.weight);
+                    
+                    if (timeDiff > 0 && wDiff > 0.5) {
+                        const rate = wDiff / timeDiff; // طن/ساعة للخزان المحدد
+                        const remaining = silo.ratedCapacity - parseFloat(lastRec.weight);
+                        if (remaining > 0 && rate > 0) {
+                            const hrsLeft = remaining / rate;
+                            const finishTime = new Date(endTime.getTime() + (hrsLeft * 3600000));
+                            insights.push(`⏱️ **توقع:** سيمتلئ ${silo.name} حوالي الساعة ${finishTime.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`);
+                        }
+                    }
+                }
+            }
+            
+            // تنبيه التوقف
+            const minsSince = (new Date() - endTime) / 60000;
+            if (minsSince > 30) {
+                insights.push(`⚠️ **تنبيه:** الطحن متوقف منذ ${minsSince.toFixed(0)} دقيقة.`);
+                liveStatus.textContent = "متوقف 💤";
+                liveStatus.style.background = "#dc3545"; 
             }
         }
 
-        // ----------------------------------------------------
-        // VII. ربط الأحداث (Event Listeners)
-        // ----------------------------------------------------
+        // تحذيرات السعات
+        AppSettings.SILOS.forEach(silo => {
+            const w = lastKnownWeights[silo.name] || 0;
+            if (w >= silo.maxExtension) insights.push(`🛑 **خطر:** ${silo.name} ممتلئ تماماً (${w}T)!`);
+            else if (w > silo.ratedCapacity) insights.push(`🚨 **تحذير:** ${silo.name} في وضع التمديد.`);
+        });
+
+        currentAiAnalysis.total = totalCurrent.toFixed(2);
+        currentAiAnalysis.insights = insights.map(i => i.replace(/\*\*(.*?)\*\*/g, '$1'));
+
+        if (insights.length === 0) insights.push("✅ النظام مستقر.");
+        insightsList.innerHTML = insights.map(i => `<li>${i.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`).join('');
+    }
+
+    // ==========================================
+    // ⚙️ إعدادات النظام (Settings UI)
+    // ==========================================
+
+    function showSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'block';
+        document.getElementById('blinkSpeedInput').value = AppSettings.BLINK_SPEED;
+        document.getElementById('highWeightColorInput').value = AppSettings.HIGH_WEIGHT_COLOR;
+        document.getElementById('extensionColorInput').value = AppSettings.EXTENSION_COLOR;
         
-        startBtn.addEventListener('click', startSession);
-        stopBtn.addEventListener('click', stopSession);
-        saveSettingsBtn.addEventListener('click', saveSettings);
+        renderSiloSettings();
 
-        // بدء تهيئة التطبيق عند تحميل النافذة
-        window.onload = initializeAppAndAuth;
+        // التحقق من صلاحيات المسؤول
+        const saveBtn = document.getElementById('saveSettingsBtn');
+        const warning = document.getElementById('admin-access-warning');
+        
+        if (currentUserEmail !== ADMIN_EMAIL) {
+            saveBtn.disabled = true;
+            saveBtn.style.backgroundColor = '#ccc';
+            saveBtn.textContent = '💾 حفظ (متاح للمسؤول فقط)';
+            warning.style.display = 'block';
+        } else {
+            saveBtn.disabled = false;
+            saveBtn.style.backgroundColor = '#28a745';
+            saveBtn.textContent = '💾 حفظ الإعدادات (Cloud)';
+            warning.style.display = 'none';
+        }
+    }
 
-    </script>
+    function hideSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function renderSiloSettings() {
+        const container = document.getElementById('siloSettingsContainer');
+        container.innerHTML = AppSettings.SILOS.map((silo, index) => `
+            <div class="silo-settings-row">
+                <div class="silo-name-input">
+                    <label>الخزان ${index+1}:</label>
+                    <input type="text" value="${silo.name}" id="silo-name-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
+                </div>
+                <div class="silo-capacity-input">
+                    <label>السعة (T):</label>
+                    <input type="number" value="${silo.ratedCapacity}" id="silo-rated-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
+                </div>
+                <div class="silo-capacity-input">
+                    <label>Max (T):</label>
+                    <input type="number" value="${silo.maxExtension}" id="silo-max-${silo.id}" ${currentUserEmail !== ADMIN_EMAIL ? 'disabled' : ''}>
+                </div>
+                ${currentUserEmail === ADMIN_EMAIL ? `<button class="danger-btn small-btn" type="button" onclick="removeSiloSetting(${silo.id})">❌</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function addSiloSetting() {
+        if (currentUserEmail !== ADMIN_EMAIL) return alert("للمسؤول فقط.");
+        const newId = AppSettings.SILOS.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+        AppSettings.SILOS.push({ id: newId, name: `New Silo ${newId}`, ratedCapacity: 50, maxExtension: 60 });
+        renderSiloSettings();
+    }
+
+    function removeSiloSetting(id) {
+        if (AppSettings.SILOS.length <= 1) return alert("يجب إبقاء خزان واحد.");
+        AppSettings.SILOS = AppSettings.SILOS.filter(s => s.id !== id);
+        renderSiloSettings();
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // تجميع القيم الجديدة
+        const newSilos = [];
+        AppSettings.SILOS.forEach(silo => {
+            newSilos.push({
+                id: silo.id,
+                name: document.getElementById(`silo-name-${silo.id}`).value,
+                ratedCapacity: parseFloat(document.getElementById(`silo-rated-${silo.id}`).value),
+                maxExtension: parseFloat(document.getElementById(`silo-max-${silo.id}`).value)
+            });
+        });
+
+        AppSettings.BLINK_SPEED = parseFloat(document.getElementById('blinkSpeedInput').value);
+        AppSettings.HIGH_WEIGHT_COLOR = document.getElementById('highWeightColorInput').value;
+        AppSettings.EXTENSION_COLOR = document.getElementById('extensionColorInput').value;
+        AppSettings.SILOS = newSilos;
+
+        const msg = document.getElementById('settingsMessage');
+        try {
+            await saveSettings();
+            msg.textContent = "✅ تم تحديث الإعدادات في السحابة بنجاح!";
+            msg.style.color = "green";
+            msg.style.display = "block";
+            applySettingsToUI();
+            setTimeout(() => { hideSettingsModal(); msg.style.display="none"; }, 2000);
+        } catch (err) {
+            msg.textContent = `❌ خطأ: ${err.message}`;
+            msg.style.color = "red";
+            msg.style.display = "block";
+        }
+    });
+
+    // ==========================================
+    // 📂 الأرشيف وإنهاء العمل
+    // ==========================================
+
+    async function endWork() {
+        if (currentSessionRecords.length === 0) return alert('لا يوجد بيانات.');
+        if (!confirm('إنهاء الجلسة وحفظها؟')) return;
+
+        performSmartAIAnalysis(); // تأكد من تحديث التحليل
+
+        const h = await loadUserHistory();
+        h.push({
+            date: new Date().toISOString(),
+            total: currentAiAnalysis.total,
+            speed: currentAiAnalysis.speed || 0,
+            aiReport: currentAiAnalysis.insights,
+            records: currentSessionRecords
+        });
+
+        await saveUserHistory(h);
+        
+        // مسح الجلسة الحالية من السحابة
+        await database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).remove();
+        
+        alert("✅ تم الحفظ بنجاح!");
+        location.reload();
+    }
+
+    async function viewHistory() {
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('historyPage').style.display = 'block';
+        
+        const h = await loadUserHistory();
+        const tb = document.getElementById('historyBody');
+        tb.innerHTML = '';
+        
+        [...h].reverse().forEach(x => {
+            const dateStr = new Date(x.date).toLocaleDateString('en-GB');
+            // تحويل الكائن لنص لتمريره للدالة
+            const jsonStr = encodeURIComponent(JSON.stringify(x));
+            
+            tb.innerHTML += `<tr>
+                <td>${dateStr}</td>
+                <td>${x.total}</td>
+                <td>${x.speed || '-'}</td>
+                <td><button class="secondary-btn small-btn" onclick="showHistoryDetails('${jsonStr}')">عرض</button></td>
+            </tr>`;
+        });
+    }
+
+    function showHistoryDetails(encodedJson) {
+        const x = JSON.parse(decodeURIComponent(encodedJson));
+        const tb = document.getElementById('modalRecordsBody');
+        tb.innerHTML = '';
+        
+        const aiSummary = document.getElementById('modalAiSummary');
+        let html = `<p><strong>الإجمالي:</strong> ${x.total} T | <strong>السرعة:</strong> ${x.speed} T/h</p>`;
+        if(x.aiReport) html += `<ul>${x.aiReport.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+        aiSummary.innerHTML = html;
+
+        x.records.forEach(r => {
+             tb.innerHTML += `<tr><td>${formatDateTimeEnglish(r.dateTime)}</td><td>${r.siloun}</td><td>${r.weight}</td><td>${r.difference}</td></tr>`;
+        });
+        document.getElementById('sessionDetailsModal').style.display = 'block';
+    }
+
+    function hideHistory() {
+        document.getElementById('historyPage').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+    }
+
+    async function factoryReset() {
+        if(!confirm("⚠️ تحذير: سيتم حذف جميع بياناتك (الجلسات والأرشيف) من السحابة. هل أنت متأكد؟")) return;
+        
+        await database.ref(DB_ROOT_PATH + 'sessions/' + currentUserId).remove();
+        await database.ref(DB_ROOT_PATH + 'history/' + currentUserId).remove();
+        
+        alert("تم الحذف.");
+        location.reload();
+    }
+
+    // ==========================================
+    // 📊 الرسوم البيانية (Charts)
+    // ==========================================
+
+    function showChartsModal() {
+        document.getElementById('chartsModal').style.display = 'block';
+        renderAllCharts();
+    }
+    function hideChartsModal() {
+        document.getElementById('chartsModal').style.display = 'none';
+        destroyAllCharts();
+    }
+    
+    function destroyAllCharts() {
+        if (currentWeightsChart) currentWeightsChart.destroy();
+        if (currentDifferencesChart) currentDifferencesChart.destroy();
+        if (historyTotalChart) historyTotalChart.destroy();
+        if (historySpeedChart) historySpeedChart.destroy();
+    }
+
+    async function renderAllCharts() {
+        destroyAllCharts();
+        
+        // 1. الأوزان الحالية
+        const labels = AppSettings.SILOS.map(s=>s.name);
+        const dataW = labels.map(n => lastKnownWeights[n] || 0);
+        currentWeightsChart = new Chart(document.getElementById('currentWeightsChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'الوزن الحالي', data: dataW, backgroundColor: 'rgba(54, 162, 235, 0.6)' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 2. الفروقات
+        const recs = [...currentSessionRecords];
+        const labelsDiff = recs.map(r => r.dateTime.split('T')[1]);
+        const dataDiff = recs.map(r => parseFloat(r.difference));
+        currentDifferencesChart = new Chart(document.getElementById('currentDifferencesChart'), {
+            type: 'line',
+            data: {
+                labels: labelsDiff,
+                datasets: [{ label: 'الفرق', data: dataDiff, borderColor: '#ff6384', fill:false }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 3 & 4 الأرشيف
+        const hist = await loadUserHistory();
+        const hLabels = hist.map(h => new Date(h.date).toLocaleDateString('en-GB'));
+        const hTotal = hist.map(h => parseFloat(h.total));
+        const hSpeed = hist.map(h => parseFloat(h.speed));
+
+        historyTotalChart = new Chart(document.getElementById('historyTotalChart'), {
+            type: 'line',
+            data: { labels: hLabels, datasets: [{ label: 'الإنتاج', data: hTotal, borderColor: '#28a745', tension: 0.1 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        historySpeedChart = new Chart(document.getElementById('historySpeedChart'), {
+            type: 'bar',
+            data: { labels: hLabels, datasets: [{ label: 'السرعة', data: hSpeed, backgroundColor: '#17a2b8' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // Helpers
+    function formatDateTimeEnglish(iso) {
+        if(!iso) return '-';
+        return new Date(iso).toLocaleString('en-GB', {hour12:false}).replace(',','');
+    }
+    function formatDateOnly(iso) {
+        if(!iso) return '-';
+        return new Date(iso).toLocaleDateString('en-GB');
+    }
+    function updateDateTime() {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        document.getElementById('dateTimeInput').value = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+    }
+    function exportData() {
+        // تصدير بسيط للبيانات المحلية الحالية
+        const d = { session: currentSessionRecords, settings: AppSettings };
+        const blob = new Blob([JSON.stringify(d)], {type:"application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "backup.json";
+        a.click();
+    }
+    function importData(e) { alert("الاستيراد السحابي غير مفعل في هذه النسخة للحفاظ على سلامة البيانات."); }
+
+</script>
 </body>
 </html>
+
 
